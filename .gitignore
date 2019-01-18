@@ -1,3 +1,5 @@
+# ignore config file, it ma contain credentials
+mopro.yaml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
