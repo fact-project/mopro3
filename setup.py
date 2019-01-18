@@ -18,5 +18,12 @@ setup(
     install_requires=[
         'ruamel.yaml',
         'click',
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'mopro_install_root = mopro.installation.root:main',
+            'mopro_install_mars = mopro.installation.mars:main',
+            'mopro_install_corsika = mopro.installation.corsika:main',
+        ],
+    },
 )

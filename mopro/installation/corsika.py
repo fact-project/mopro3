@@ -1,5 +1,7 @@
 import subprocess as sp
 import os
+import click
+
 from ..config import Config
 from .download import download_and_unpack
 import logging
@@ -45,20 +47,23 @@ def install_corsika(
     download_timeout=300,
     install_timeout=120,
 ):
+    path = os.path.abspath(path)
     if os.path.exists(path):
         raise ValueError('CORSIKA install path already exists')
 
-    download_corsika(path, version=version, timeout=download_timeout)
+    env = os.environ.copy()
+    env['F77'] = sp.check_output(['bash', '-c', 'which gfortran'])
 
     use_fluka = False
-    for line in config_h:
+    for line in config_h.splitlines():
         if line.startswith('#define HAVE_FLUKA 1'):
             use_fluka = True
 
+    download_corsika(path, version=version, timeout=download_timeout)
     if use_fluka:
         fluka_dir = os.path.join(path, 'fluka')
         download_fluka(fluka_dir, timeout=download_timeout)
-        os.environ['FLUPRO'] = fluka_dir
+        env['FLUPRO'] = fluka_dir
 
     with open(os.path.join(path, 'include', 'config.h'), 'w') as f:
         f.write(config_h)
@@ -68,7 +73,8 @@ def install_corsika(
         ['./coconut', '-b'],
         cwd=path,
         stderr=sp.STDOUT, stdout=sp.PIPE,
-        encoding='utf-8'
+        encoding='utf-8',
+        env=env,
     )
     try:
         install.wait(timeout=install_timeout)
@@ -86,3 +92,17 @@ def install_corsika(
         out, err = install.communicate()
         log.error(out)
         raise OSError(f'CORSIKA installation timed out:\n{out}')
+
+
+@click.command(name='install_corsika')
+@click.argument('install_path', type=click.Path(exists=False))
+@click.argument('config_h', type=click.Path(exists=True))
+@click.option(
+    '-v', '--version', type=click.INT, default=76900, show_default=True,
+    help='CORSIKA Version as 5 digit integer',
+)
+def main(install_path, config_h, version):
+    with open(config_h) as f:
+        config_h = f.read()
+
+    install_corsika(install_path, config_h, version=version)
