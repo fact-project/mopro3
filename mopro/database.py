@@ -1,9 +1,11 @@
 from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase
 from peewee import (
     TextField, IntegerField, FloatField, Check,
-    ForeignKeyField
+    ForeignKeyField, DateTimeField, BooleanField,
 )
 from jinja2 import Template
+import os
+
 from .config import config
 
 
@@ -31,6 +33,7 @@ class CorsikaSettings(BaseModel):
     inputcard_template: str
         Jinja2 template for the inputcard
     '''
+    name = TextField(unique=True)
     version = IntegerField(default=76900)
     config_h = TextField()
     inputcard_template = TextField()
@@ -66,6 +69,7 @@ class CorsikaRun(BaseModel):
     reuse: int
         number of reuses for each shower
     '''
+    # CORSIKA related fields
     corsika_settings = ForeignKeyField(CorsikaSettings)
 
     primary_particle = IntegerField()
@@ -86,6 +90,12 @@ class CorsikaRun(BaseModel):
     reuse = IntegerField(default=1)
     max_radius = FloatField()
     bunch_size = IntegerField(default=1)
+
+    # processing related fields
+    start_time = DateTimeField(null=True)
+    end_time = DateTimeField(null=True)
+    status = ForeignKeyField(Status, null=True)
+    walltime = IntegerField(default=360)
 
     class Meta:
         constraints = [
@@ -126,13 +136,72 @@ class CorsikaRun(BaseModel):
 
 
 class CeresSettings(BaseModel):
+    name = TextField(unique=True)
     revision = IntegerField()
     rc_template = TextField()
+
+    # files
+    atmosphere_aerosol_file = TextField()
+    reflector_file = TextField()
+    mirror_reflectivity_file = TextField()
+    pde_file = TextField()
+    cone_angular_acceptance_file = TextField()
+    cone_transmission_file = TextField()
+    nsb_file = TextField()
+    pixel_delay_file = TextField()
+    route_ac_file = TextField()
+
+    # settings
+    psf_sigma = FloatField()
+    apd_dead_time = FloatField()
+    apd_recovery_time = FloatField()
+    apd_cross_talk = FloatField()
+    apd_afterpulse_probability_1 = FloatField()
+    apd_afterpulse_probability_2 = FloatField()
+    excess_noise = FloatField()
+    additional_photon_acceptance = FloatField()
+    dark_count_rate = FloatField()
+    pulse_shape_function = TextField()
+    residual_time_spread = FloatField()
+    gapd_time_jitter = FloatField()
+
+    def format_rc(self, run, resource_directory):
+        return Template(self.rc_template).render(
+            settings=self, run=run, resource_directory=resource_directory
+        )
+
+    def write_files(self, resource_directory):
+        files = {
+            'atmosphere-aerosols.txt': self.atmosphere_aerosol_file,
+            'reflector.txt': self.reflector_file,
+            'mirror-reflectivity.txt': self.mirror_reflectivity_file,
+            'pde.txt': self.pde_file,
+            'cone_angular_acceptance.txt': self.cone_angular_acceptance_file,
+            'cone_transmission.txt': self.cone_transmission_file,
+            'nsb.txt': self.nsb_file,
+            'pixel-delays.csv': self.pixel_delay_file,
+            'route-ac.txt': self.route_ac_file,
+        }
+        os.makedirs(resource_directory, exists_ok=True)
+        for name, content in files.items():
+            with open(os.path.join(resource_directory, name), 'w') as f:
+                f.write(content)
 
 
 class CeresRun(BaseModel):
     ceres_settings = ForeignKeyField(CeresSettings)
+    # input file
     corsika_run = ForeignKeyField(CorsikaRun)
+
+    # per run settings
+    off_target_distance = FloatField(default=6)
+    diffuse = BooleanField(default=True)
+
+    # processing related fields
+    start_time = DateTimeField(null=True)
+    end_time = DateTimeField(null=True)
+    status = ForeignKeyField(Status, null=True)
+    walltime = IntegerField(default=360)
 
 
 status_names = (

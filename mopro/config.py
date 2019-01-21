@@ -41,7 +41,7 @@ class Config():
     def __init__(self, paths=default_paths):
         for path in paths:
             if os.path.isfile(path):
-                Config.load_yaml(path)
+                self.load_yaml(path)
 
     def load_yaml(self, path):
         with open(path, 'rb') as f:

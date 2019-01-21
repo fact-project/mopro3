@@ -10,8 +10,8 @@
 # Use this if you want to setup the logging stream for the jobs
 # (overwrites command line options)
 # -------------------------------------------------------------------------
-MLog.VerbosityLevel: 1
-#MLog.DebugLevel:     1
+MLog.VerbosityLevel: 0
+MLog.DebugLevel:     0
 MLog.NoColors:       yes
 
 # ==========================================================================
@@ -59,7 +59,7 @@ BinningTrigPos.Raw: 300 -25 275
 # Initialize random number generator (see MJob::InitRandomNumberGenerator)
 # -------------------------------------------------------------------------
 RandomNumberGenerator: TRandom3
-#RandomNumberSeedValue: 0
+RandomNumberSeedValue: {{ run.id + 1 }}
 
 
 # -------------------------------------------------------------------------
@@ -76,8 +76,8 @@ RandomNumberGenerator: TRandom3
 # -------------------------------------------------------------------------
 # Some setup for the atmosphere. The default should be well suited.
 # -------------------------------------------------------------------------
-#MSimAtmosphere.FileAerosols: resmc/fact/atmopshere-aerosols.txt
-#MSimAtmosphere.FileOzone:    resmc/fact/atmopshere-ozone.txt
+MSimAtmosphere.FileAerosols:  {{ resource_path }}/atmopshere-aerosols.txt
+MSimAtmosphere.FileOzone:    {{ resource_path }}/settingshere-ozone.txt
 
 
 # -------------------------------------------------------------------------
@@ -85,7 +85,11 @@ RandomNumberGenerator: TRandom3
 # off-target observations set a value for the distance !=0 [deg].
 # For details see MSimPointingPos
 # -------------------------------------------------------------------------
-MSimPointingPos.OffTargetDistance: {ceres.off_target_distance:.1f}
+{% if run.diffuse %}
+MSimPointingPos.OffTargetDistance: -{{ run.off_target_distance }}
+{% else %}
+MSimPointingPos.OffTargetDistance: {{ run.off_target_distance }}
+{% endif %}
 #MSimPointingPos.OffTargetPhi: -1
 
 
@@ -96,28 +100,8 @@ Reflector.Constructor: MReflector
 
 # For the file definition see MReflector::ReadFile
 
-Reflector.FileName: {resource_directory}/fact-reflector_first_light_untill_May2014.txt
-# Units mm: ~0.02°
-#Reflector.SetSigmaPSF: 1.8
-# Units mm: ~0.03°
-#Reflector.SetSigmaPSF: 2.6
-#Reflector.SetSigmaPSF: 1.66
-
-# new Value from 7.12.2012:
-# 0.95 of the reflected light was inside a circle with a radius of 2.25mm. This corresponds to a SigmaPSF of 1.3 mm
-#Reflector.SetSigmaPSF: 1.3
-
-# new Value from 29.05.2013:
-# Set SigmaPSF to pixelsize
-Reflector.SetSigmaPSF: 2.0
-
-# --- DWARF ---
-# distance from mirror to camera [cm]
-#focal_distance     489.73
-# TRUE focal of the paraboloid (must correspond to that of the mirror positions defined below!)
-#paraboloid_focal   488.87
-
-#MGeomCam.Constructor:   MGeomCamDwarf(189.8,  9.5,  4.8887);
+Reflector.FileName: {resource_directory}/reflector.txt
+Reflector.SetSigmaPSF: {{ settings.psf_sigma }}
 MGeomCam.Constructor:   MGeomCamFACT();
 
 #MSimBundlePhotons.FileName: resmc/fact/dwarf-fact.txt
@@ -125,23 +109,23 @@ MGeomCam.Constructor:   MGeomCamFACT();
 # Set the APD type (1: 30x30 <default>, 2: 60x60, 3:60x60(ct=15%))
 MSimAPD.Type:                   0
 MSimAPD.NumCells:               60
-MSimAPD.DeadTime:               3.0
-MSimAPD.RecoveryTime:           8.75
-MSimAPD.CrosstalkCoefficient:   0.1
-MSimAPD.AfterpulseProb1:        0.14
-MSimAPD.AfterpulseProb2:        0.11
+MSimAPD.DeadTime:               {{ settings.apd_dead_time }}
+MSimAPD.RecoveryTime:           {{ settings.apd_recovery_time }}
+MSimAPD.CrosstalkCoefficient:   {{ settings.apd_cross_talk }}
+MSimAPD.AfterpulseProb1:        {{ settings.apd_afterpulse_probability_1 }}
+MSimAPD.AfterpulseProb2:        {{ settings.apd_afterpulse_probability_2 }}
 
-MSimExcessNoise.ExcessNoise:    0.096
+MSimExcessNoise.ExcessNoise:    {{ settings.excess_noise }}
 
 # -------------------------------------------------------------------------
 # Setup the absorption, conversion efficiency and angular acceptance
 # -------------------------------------------------------------------------
-MirrorReflectivity.FileName:           {resource_directory}/MirrorReflectivity_Lustermann_FACT_bearbeitet.txt
-PhotonDetectionEfficiency.FileName:    {resource_directory}/fact-pde-1.4V.txt
-ConesAngularAcceptance.FileName:       {resource_directory}/fact-cones-angular-acceptance.txt
-ConesTransmission.FileName:            {resource_directory}/Transmittance_1439Cones_FACT_bearbeitet.txt
+MirrorReflectivity.FileName:           {{ resource_directory }}/mirror-reflectivity.txt
+PhotonDetectionEfficiency.FileName:    {{ resource_directory }}/pde.txt
+ConesAngularAcceptance.FileName:       {{ resource_directory }}/cone-angular-acceptance.txt
+ConesTransmission.FileName:            {{ resource_directory }}/cone-transmission.txt
 
-AdditionalPhotonAcceptance.Function.Name:     0.85
+AdditionalPhotonAcceptance.Function.Name:     {{ settings.additional_photon_acceptance }}
 AdditionalPhotonAcceptance.Function.Npx:      100
 AdditionalPhotonAcceptance.Function.Xmin:     290
 AdditionalPhotonAcceptance.Function.Xmax:     900
@@ -155,19 +139,10 @@ AdditionalPhotonAcceptance.Function.Xmax:     900
 # -------------------------------------------------------------------------
 # Setup the dark counts (FrequencyFixed) and the NSB noise per cm^2
 # -------------------------------------------------------------------------
-# Dark Counts per APD: ~4MHz
-MSimRandomPhotons.FrequencyFixed: 0.004
-# NSB photon rate per cm^2 ~40MHz (folded with the cones' angular
-# acceptance and the wavelength acceptance of the camera (window, apd, etc)
-# 0.040 1/ns/cm^2 NSB-rate:
-#MSimRandomPhotons.FrequencyNSB:   0.025
-MSimRandomPhotons.FileNameNSB: resmc/night-sky-la-palma.txt
-MSimRandomPhotons.FrequencyNSB: 0.0
+MSimRandomPhotons.FrequencyFixed: {{ settings.dark_count_rate }}
+MSimRandomPhotons.FrequencyNSB: {{ run.nsb_rate }}
+MSimRandomPhotons.FileNameNSB:  {{ resource_directory }}/nsb.txt
 
-
-
-# FIXME: With a class describing the cones we could give NSB as
-# per sr and cm^2
 
 # -------------------------------------------------------------------------
 # Setup the trigger
@@ -175,10 +150,8 @@ MSimRandomPhotons.FrequencyNSB: 0.0
 # This line could be omitted but then the discriminator would be
 # evaluated for all pixels not just for the pixels which are
 # later "connected" in the trigger (used in the coincidence map)
-MSimTrigger.FileNameRouteAC: {resource_directory}/fact-trigger-sum.txt
-
-# DiscriminatorThreshold is 9*offset(-1850)+21*gain(22.375)=16180.125
-MSimTrigger.DiscriminatorThreshold: -192.387
+MSimTrigger.FileNameRouteAC: {{ resource_directory }}/route-ac.txt
+MSimTrigger.DiscriminatorThreshold: {{ setings.discriminator_threshold }}
 
 MSimTrigger.CableDelay: 21.0
 MSimTrigger.CableDamping: -0.96
@@ -188,18 +161,7 @@ MSimTrigger.CoincidenceTime: 0.5
 MSimCalibrationSignal.NumPhotons: 24
 MSimCalibrationSignal.NumEvents:  1000
 
-
 IntendedPulsePos.Val: 26
-
-
-# -------------------------------------------------------------------------
-# Description how a pedestal/calibration signal is produced
-# -------------------------------------------------------------------------
-
-#MSimCalibrationSignal.NumEvents:  1000
-#MSimCalibrationSignal.NumPhotons;    5
-#MSimCalibrationSignal.TimeJitter;  1.0
-
 
 # -------------------------------------------------------------------------
 # Setup the FADC
@@ -228,11 +190,10 @@ MSimCamera.ACTimeConstant: 20
 # to sample the function accuratly enough.
 # Attention: x in the function is given in slices, so if you change the sampling
 # frequency you have to change also this function
-PulseShape.Function.Name:  (1.239*(1-1/(1+exp((0.5*x-2.851)/1.063)))*exp(-(0.5*x-2.851)/19.173))
+PulseShape.Function.Name:  {{ settings.pulse_shape_function }}
 PulseShape.Function.Npx:   310
 PulseShape.Function.Xmin:  -10
 PulseShape.Function.Xmax:  300
-# PulseShape.FileName: /home/maxnoe/Uni/FACT/mcprod/mc_configuration_files/setup/ceres/030/pulse_template_20141216_filtered.txt
 
 
 # -------------------------------------------------------------------------
@@ -258,9 +219,9 @@ Cut.Condition: MHillas.fSize>10.0
 #ContEmpty3.Condition: MPhotonEvent.GetNumPhotons<10
 ContEmpty3.Condition: MPhotonEvent.GetNumPhotons<10
 
-MFixTimeOffset.FileName: {resource_directory}/pixel_delays_ALL_ZERO.csv
-ResidualTimeSpread.Val: 0.0
-GapdTimeJitter.Val: 1.5
+MFixTimeOffset.FileName: {{ resource_directory }}/pixel-delays.csv
+ResidualTimeSpread.Val: {{ settings.residual_time_spread }}
+GapdTimeJitter.Val: {{ settings.gapd_time_jitter }}
 
 # last line comment
 

@@ -17,6 +17,7 @@ def test_create_run():
 
     with database.transaction():
         c = CorsikaSettings()
+        c.name = 'epos_fluka_iact'
         c.config_h = open('examples/epos_fluka_iact.h').read()
         c.inputcard_template = open('examples/inputcard_template.txt').read()
         c.version
