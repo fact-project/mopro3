@@ -76,8 +76,8 @@ RandomNumberSeedValue: {{ run.id + 1 }}
 # -------------------------------------------------------------------------
 # Some setup for the atmosphere. The default should be well suited.
 # -------------------------------------------------------------------------
-MSimAtmosphere.FileAerosols:  {{ resource_path }}/atmopshere-aerosols.txt
-MSimAtmosphere.FileOzone:    {{ resource_path }}/settingshere-ozone.txt
+MSimAtmosphere.FileAerosols:  {{ resource_directory }}/atmopshere-aerosols.txt
+MSimAtmosphere.FileOzone:    {{ resource_directory }}/atmosphere-ozone.txt
 
 
 # -------------------------------------------------------------------------

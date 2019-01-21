@@ -141,6 +141,7 @@ class CeresSettings(BaseModel):
     rc_template = TextField()
 
     # files
+    atmosphere_ozone_file = TextField()
     atmosphere_aerosol_file = TextField()
     reflector_file = TextField()
     mirror_reflectivity_file = TextField()
@@ -173,12 +174,13 @@ class CeresSettings(BaseModel):
 
     def write_files(self, resource_directory):
         files = {
+            'atmosphere-ozone.txt': self.atmosphere_ozone_file,
             'atmosphere-aerosols.txt': self.atmosphere_aerosol_file,
             'reflector.txt': self.reflector_file,
             'mirror-reflectivity.txt': self.mirror_reflectivity_file,
             'pde.txt': self.pde_file,
-            'cone_angular_acceptance.txt': self.cone_angular_acceptance_file,
-            'cone_transmission.txt': self.cone_transmission_file,
+            'cone-angular-acceptance.txt': self.cone_angular_acceptance_file,
+            'cone-transmission.txt': self.cone_transmission_file,
             'nsb.txt': self.nsb_file,
             'pixel-delays.csv': self.pixel_delay_file,
             'route-ac.txt': self.route_ac_file,
