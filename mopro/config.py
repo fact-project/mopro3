@@ -12,39 +12,53 @@ It also checks for the following environment variables:
 '''
 import os
 from ruamel.yaml import YAML
+from collections import namedtuple
 
 yaml = YAML(typ='safe')
 
-
-class Config:
-    corsika_password = os.environ.get('CORSIKA_PASSWORD', '')
-    corsika_version = int(os.environ.get('CORSIKA_VERSION', 76900))
-    fluka_id = os.environ.get('FLUKA_ID', '')
-    fluka_password = os.environ.get('FLUKA_PASSWORD', '')
-
-    @classmethod
-    def load_yaml(cls, path):
-        with open(path, 'rb') as f:
-            config = yaml.load(f)
-
-        cls.parse_dict(config)
-
-    @classmethod
-    def parse_dict(cls, config):
-        corsika = config.get('corsika', {})
-        cls.corsika_password = corsika.get('password', '') or cls.corsika_password
-        cls.corsika_version = corsika.get('version', '') or cls.corsika_version
-
-        fluka = config.get('fluka', {})
-        cls.fluka_id = fluka.get('id', '') or cls.fluka_id
-        cls.fluka_password = fluka.get('password', '') or cls.fluka_password
-
-
-config_paths = [
+# default paths
+default_paths = [
     os.path.join(os.environ['HOME'], 'mopro.yaml'),
     os.path.join(os.getcwd(), 'mopro.yaml'),
 ]
 
-for path in config_paths:
-    if os.path.isfile(path):
-        Config.load_yaml(path)
+
+DatabaseConfig = namedtuple(
+    'DatabaseConfig',
+    ['kind', 'host', 'port', 'user', 'password', 'database']
+)
+# provide defaults for namedtuple fields
+# default is an in-memory sqlite database
+DatabaseConfig.__new__.__defaults__ = ('sqlite', None, None, None, None, ':memory:')
+
+
+class Config():
+    corsika_password = os.environ.get('CORSIKA_PASSWORD', '')
+    fluka_id = os.environ.get('FLUKA_ID', '')
+    fluka_password = os.environ.get('FLUKA_PASSWORD', '')
+    database = DatabaseConfig()
+
+    def __init__(self, paths=default_paths):
+        for path in paths:
+            if os.path.isfile(path):
+                Config.load_yaml(path)
+
+    def load_yaml(self, path):
+        with open(path, 'rb') as f:
+            config = yaml.load(f)
+
+        self.parse_dict(config)
+
+    def parse_dict(self, config):
+        corsika = config.get('corsika', {})
+        self.corsika_password = corsika.get('password', '') or self.corsika_password
+
+        fluka = config.get('fluka', {})
+        self.fluka_id = fluka.get('id', '') or self.fluka_id
+        self.fluka_password = fluka.get('password', '') or self.fluka_password
+
+        if config.get('database') is not None:
+            self.database = DatabaseConfig(**config['database'])
+
+
+config = Config()

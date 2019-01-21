@@ -18,6 +18,7 @@ setup(
     install_requires=[
         'ruamel.yaml',
         'click',
+        'peewee~=3.8',
     ],
     entry_points={
         'console_scripts': [

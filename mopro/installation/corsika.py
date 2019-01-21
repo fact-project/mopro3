@@ -2,7 +2,7 @@ import subprocess as sp
 import os
 import click
 
-from ..config import Config
+from ..config import config
 from .download import download_and_unpack
 import logging
 
@@ -24,7 +24,7 @@ def download_corsika(path, version=76900, timeout=300):
     filename = basename + '.tar.gz'
 
     url = os.path.join(CORSIKA_URL, version_dir, filename)
-    auth = f'{USER}:{Config.corsika_password}'
+    auth = f'{USER}:{config.corsika_password}'
 
     log.info(f'Downloading CORSIKA into {path}')
     download_and_unpack(url, path, auth=auth, timeout=timeout, strip=1)
@@ -34,7 +34,7 @@ def download_fluka(path, timeout=300):
     if os.path.exists(path):
         raise ValueError('FLUKA download path already exists')
 
-    auth = f'{Config.fluka_id}:{Config.fluka_password}'
+    auth = f'{config.fluka_id}:{config.fluka_password}'
 
     log.info(f'Downloading FLUKA into {path}')
     download_and_unpack(FLUKA_URL, path, auth=auth, timeout=timeout)
