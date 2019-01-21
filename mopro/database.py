@@ -147,7 +147,7 @@ class CeresSettings(BaseModel):
     pde_file = TextField()
     cone_angular_acceptance_file = TextField()
     cone_transmission_file = TextField()
-    nsb_file = TextField()
+    nsb_file = TextField(null=True)
     pixel_delay_file = TextField()
     route_ac_file = TextField()
 
@@ -159,6 +159,7 @@ class CeresSettings(BaseModel):
     apd_afterpulse_probability_1 = FloatField()
     apd_afterpulse_probability_2 = FloatField()
     excess_noise = FloatField()
+    nsb_rate = FloatField(null=True)
     additional_photon_acceptance = FloatField()
     dark_count_rate = FloatField()
     pulse_shape_function = TextField()

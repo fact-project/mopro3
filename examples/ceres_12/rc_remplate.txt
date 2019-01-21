@@ -140,8 +140,11 @@ AdditionalPhotonAcceptance.Function.Xmax:     900
 # Setup the dark counts (FrequencyFixed) and the NSB noise per cm^2
 # -------------------------------------------------------------------------
 MSimRandomPhotons.FrequencyFixed: {{ settings.dark_count_rate }}
+{% if settings.nsb_rate %}
 MSimRandomPhotons.FrequencyNSB: {{ run.nsb_rate }}
+{% else %}
 MSimRandomPhotons.FileNameNSB:  {{ resource_directory }}/nsb.txt
+{% endif %}
 
 
 # -------------------------------------------------------------------------
