@@ -46,6 +46,7 @@ def install_corsika(
     path,
     config_h,
     version=76900,
+    additional_files=None,
     download_timeout=300,
     install_timeout=120,
 ):
@@ -98,6 +99,13 @@ def install_corsika(
     for f in glob(os.path.join(path, 'bernlohr', 'atmprof*')):
         name = os.path.basename(f)
         shutil.copy2(f, os.path.join(path, 'run', name))
+
+    if additional_files is not None:
+        sp.run(
+            ['tar', 'xz', '-C', os.path.join(path, 'run')],
+            input=additional_files,
+            check=True,
+        )
 
 
 @click.command(name='install_corsika')

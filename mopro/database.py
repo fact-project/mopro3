@@ -2,6 +2,7 @@ from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase
 from peewee import (
     TextField, IntegerField, FloatField, Check,
     ForeignKeyField, DateTimeField, BooleanField,
+    BlobField,
 )
 from jinja2 import Template
 import os
@@ -37,6 +38,7 @@ class CorsikaSettings(BaseModel):
     version = IntegerField(default=76900)
     config_h = TextField()
     inputcard_template = TextField()
+    additional_files = BlobField(null=True)
 
     def format_input_card(self, run, output_file):
         return Template(self.inputcard_template).render(
