@@ -92,10 +92,12 @@ class CorsikaRun(BaseModel):
     bunch_size = IntegerField(default=1)
 
     # processing related fields
+    priority = IntegerField(default=5)
     start_time = DateTimeField(null=True)
     end_time = DateTimeField(null=True)
     status = ForeignKeyField(Status, null=True)
     walltime = IntegerField(default=360)
+    result_file = TextField(null=True)
 
     class Meta:
         constraints = [
@@ -141,8 +143,6 @@ class CeresSettings(BaseModel):
     rc_template = TextField()
 
     # files
-    atmosphere_ozone_file = TextField()
-    atmosphere_aerosol_file = TextField()
     reflector_file = TextField()
     mirror_reflectivity_file = TextField()
     pde_file = TextField()
@@ -174,8 +174,6 @@ class CeresSettings(BaseModel):
 
     def write_files(self, resource_directory):
         files = {
-            'atmosphere-ozone.txt': self.atmosphere_ozone_file,
-            'atmosphere-aerosols.txt': self.atmosphere_aerosol_file,
             'reflector.txt': self.reflector_file,
             'mirror-reflectivity.txt': self.mirror_reflectivity_file,
             'pde.txt': self.pde_file,
@@ -205,6 +203,8 @@ class CeresRun(BaseModel):
     end_time = DateTimeField(null=True)
     status = ForeignKeyField(Status, null=True)
     walltime = IntegerField(default=360)
+    priority = IntegerField(default=5)
+    result_file = TextField(null=True)
 
 
 status_names = (
@@ -245,3 +245,8 @@ def setup_database():
     with database.atomic():
         for name in status_names:
             Status.get_or_create(name=name)
+
+
+if __name__ == '__main__':
+    initialize_database()
+    setup_database()

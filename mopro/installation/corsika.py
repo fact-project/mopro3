@@ -1,10 +1,12 @@
 import subprocess as sp
 import os
 import click
+import logging
+from glob import glob
+import shutil
 
 from ..config import config
 from .download import download_and_unpack
-import logging
 
 
 log = logging.getLogger(__name__)
@@ -92,6 +94,10 @@ def install_corsika(
         out, err = install.communicate()
         log.error(out)
         raise OSError(f'CORSIKA installation timed out:\n{out}')
+
+    for f in glob(os.path.join(path, 'bernlohr', 'atmprof*')):
+        name = os.path.basename(f)
+        shutil.copy2(f, os.path.join(path, 'run', name))
 
 
 @click.command(name='install_corsika')

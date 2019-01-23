@@ -74,13 +74,6 @@ RandomNumberSeedValue: {{ run.id + 1 }}
 
 
 # -------------------------------------------------------------------------
-# Some setup for the atmosphere. The default should be well suited.
-# -------------------------------------------------------------------------
-MSimAtmosphere.FileAerosols:  {{ resource_directory }}/atmopshere-aerosols.txt
-MSimAtmosphere.FileOzone:    {{ resource_directory }}/atmosphere-ozone.txt
-
-
-# -------------------------------------------------------------------------
 # Here you can control the poiting of the telescope. To switch on
 # off-target observations set a value for the distance !=0 [deg].
 # For details see MSimPointingPos

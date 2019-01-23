@@ -37,6 +37,7 @@ class Config():
     fluka_id = os.environ.get('FLUKA_ID', '')
     fluka_password = os.environ.get('FLUKA_PASSWORD', '')
     database = DatabaseConfig()
+    mopro_directory = None
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -59,6 +60,8 @@ class Config():
 
         if config.get('database') is not None:
             self.database = DatabaseConfig(**config['database'])
+
+        self.mopro_directory = config.get('mopro_directory')
 
 
 config = Config()

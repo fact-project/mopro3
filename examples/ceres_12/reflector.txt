@@ -1,0 +1,98 @@
+-30.80 -161.97 25.88 0.0322080  0.1669300 0.9854400 490.2 Hex 60.6
+31.17 -160.45 25.53 -0.0319520 0.1653500 0.9857200 490.2 Hex 60.6
+-123.95 -109.14 27.82 0.1293000 0.1128500 0.9851600 489.4 Hex 60.6
+-61.85 -108.14 14.59 0.0642970 0.1109600 0.9917400 488.8 Hex 60.6
+0.21 -107.92 11.39 0.0001809 0.1107700 0.9938500 488.4 Hex 60.6
+62.85 -107.66 14.61 -0.0658870 .1098400 0.9917600 488.8 Hex 60.6
+124.89 -107.66 27.48 -0.1299000 0.1112300 0.9852700 489.4 Hex 60.6
+-154.57 -55.46 27.66 0.1615100 0.0568170 0.9852300 490.2 Hex 60.6
+-92.42 -54.63 12.81 0.0953260 0.0556070 0.9938900 488.5 Hex 60.6
+-30.84 -54.46 5.59 0.0321440 0.0559240 0.9979200 487.6 Hex 60.6
+32.06 -53.11 4.86 -0.0326670 0.0540090 0.9980100 488.1 Hex 60.6
+93.16 -52.72 12.27 -0.0963280 0.0541920 0.9938700 488.7 Hex 60.6
+155.18 -52.96 27.52 -0.1611900 0.0549130 0.9853900 490.0 Hex 60.6
+-122.86 -0.87 16.93 0.1275800 .0006425 0.9918300 488.9 Hex 60.6
+-62.29 -0.45 5.90 0.0637080 0.0001332 0.9979700 488.4 Hex 60.6
+62.66 1.09 5.44 -0.0642460 -0.0010957 0.9979300 488.2 Hex 60.6
+122.95 1.09 16.49 -0.1263200 -0.0025533 0.9919900 489.1 Hex 60.6
+-154.50 52.94 25.75 0.1602800 -0.0543290 0.9855800 490.1 Hex 60.6
+-92.38 53.20 12.28 0.0953780 -0.0542570 0.9939600 488.5 Hex 60.6
+-31.37 53.44 4.20 0.0314150 -0.0540770 0.9980400 488.3 Hex 60.6
+30.13 54.14 5.15 -0.0313310 -0.0548110 0.9980100 488.2 Hex 60.6
+92.27 54.84 12.85 -0.0958920 -0.0557500 0.9938300 488.6 Hex 60.6
+154.72 55.53 26.91 -0.1618800 -0.0587130 0.9850600 490.0 Hex 60.6
+-124.23 106.82 26.64 0.1297700 -0.1100800 0.9854200 489.4 Hex 60.6
+-63.37 107.25 15.47 0.0646380 -0.1096400 0.9918700 488.8 Hex 60.6
+-0.92 107.12 11.42 0.0019974 -0.1090400 0.9940400 488.5 Hex 60.6
+61.07 107.58 15.65 -0.0634960 -0.1101700 0.9918800 489.0 Hex 60.6
+124.28 110.00 27.83 -0.1294400 -0.1133200 0.9850900 489.5 Hex 60.6
+-31.63 161.28 25.80 0.0319720 -0.1659200 0.9856200 490.1 Hex 60.6
+30.39 161.28 25.93 -0.0319720 -0.1659200 0.9856200 490.0 Hex 60.6
+
+
+
+#########################################################################################		
+# x y z nx ny nz F Type fD  								#
+
+#											#
+
+#											#
+
+# x, y and z describe the x-, y- and z-coordinate of the center of the mirror		#
+
+#											#
+
+# nx, ny and nz describe the x-, y- and z- component of the normal vector of the mirror #
+
+# which is normed									#
+
+#											#
+
+# F is the focal distance of the spherical mirror					#
+
+#											#
+
+# Type: Hex is a hexagonal mirror							#
+
+#											#
+
+# fD = 60.6 is the distance of two parallel sides of the hexagon in cm			#
+
+#										  	#
+
+# the normalvectors point to (0,0,978.132)						#
+
+#											#
+
+# Sebastian Mueller:                                                                    #
+#                                                                                       #
+# Old Reflector Setup from First Light untill May 2014                                  #
+#                                                                                       #
+# The normal vector (nx,ny,nz) of the mirror ID14 could not be reconstructed because    #
+# it was ripped of the telescope. It has been given the same normal vector as its       #
+# neighbour ID13 but the sign of nx has been flipped.                                   #
+#                                                                                       #
+# This data is taken from the Reflector Alignment 2014 using the                        #
+# advanced (S)olar (C)oncentrator (C)haracterisation (A)t (N)ight approach outlined in  #
+# my Master Thesis Appendix                                                             #
+#                                                                                       #
+#                    Clear Sight in Cherenkov Astronomy                                 #
+#                   Investigations of Reflector Geometry                                #
+#                      and Mirror Alignment for the                                     #
+#                             FACT Telescope 	                                        #
+#                                                                                       #
+# Download at:                                                                          #
+# http://app.tu-dortmund.de/images/stories/mitarbeiter/Masterarbeiten/                  #
+# Masterarbeit_Mueller_small.pdf                                                        #
+#                                                                                       #
+# Or send me an Email to:                                                               #
+# sebmuell@phys.ethz.ch                                                                 #
+#                                                                                       #
+# The numbers here schould be the same as in the appendix of this thesis.               #
+# There is a Matlab script which calculates this numbers when given the SCCAN output    #
+# which may be modified in case of errata.                                              #
+# As far as I know this technique, outlined in the appendix, has not been cross checked #
+# yet.                                                                                  #
+#                                                                                       #
+# Zuerich Friday 29 August 2014                                                         #
+#########################################################################################
