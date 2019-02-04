@@ -24,24 +24,37 @@ logging.getLogger().addHandler(handler)
 def main():
     log.info('CORSIKA executor started')
 
-    host = os.environ['SUBMITTER_HOST']
-    port = os.environ['SUBMITTER_PORT']
+    host = os.environ['MOPRO_SUBMITTER_HOST']
+    port = os.environ['MOPRO_SUBMITTER_PORT']
     socket.connect('tcp://{}:{}'.format(host, port))
 
-    job_id = int(os.environ['SLURM_JOB_NAME'].replace('mopro_', ''))
+    job_id = int(os.environ['MOPRO_JOB_ID'])
 
-    socket.send_pyobj({'job_id': job_id, 'status': 'running'})
+    def send_status_update(status, **kwargs):
+        socket.send_pyobj({
+            'program': 'corsika',
+            'job_id': job_id,
+            'status': status,
+            **kwargs
+        })
+
+    send_status_update('running')
     socket.recv()
 
-    output_dir, filename = os.path.split(os.environ('OUTPUTFILE'))
-    output_dir = os.path.abspath(output_dir)
+    output_dir = os.environ['MOPRO_OUTPUTDIR']
+    output_file = os.environ['MOPRO_OUTPUTFILE']
+
     os.makedirs(output_dir, exist_ok=True)
 
-    corsika_dir = os.environ['CORSIKA_DIR']
-    with open(os.environ['INPUTCARD'], 'rb') as f:
+    corsika_dir = os.environ['MOPRO_CORSIKA_DIR']
+    env = os.environ.copy()
+    env['FLUPRO'] = os.path.join(corsika_dir, 'fluka')
+    corsika_exe = os.path.basename(glob(os.path.join(corsika_dir, 'run', 'corsika*'))[0])
+
+    with open(os.environ['MOPRO_INPUTCARD'], 'rb') as f:
         inputcard = f.read()
 
-    walltime = float(os.environ['WALLTIME'])
+    walltime = float(os.environ['MOPRO_WALLTIME'])
     log.info('Walltime = %.0f', walltime)
 
     job_name = 'fact_mopro_job_id_' + str(job_id) + '_'
@@ -51,7 +64,6 @@ def main():
         run_dir = os.path.join(tmp_dir, 'run')
         shutil.copytree(os.path.join(corsika_dir, 'run'), run_dir)
         timeout = walltime - (start_time - time.monotonic()) - 300
-        corsika_exe = os.path.basename(glob(os.path.join('run_dir', 'corsika_*'))[0])
         try:
             sp.run(
                 ['./' + corsika_exe],
@@ -59,27 +71,34 @@ def main():
                 timeout=timeout,
                 cwd=run_dir,
                 input=inputcard,
+                env=env,
             )
 
         except sp.CalledProcessError:
-            socket.send_pyobj({'job_id': job_id, 'status': 'failed'})
+            send_status_update('failed')
             socket.recv()
             log.exception('Running CORSIKA failed')
             sys.exit(1)
+
         except sp.TimeoutExpired:
-            socket.send_pyobj({'job_id': job_id, 'status': 'walltime_exceeded'})
+            send_status_update('walltime_exceeded')
             log.error('CORSIKA about to run into wall-time, terminating')
+            socket.recv()
+            sys.exit(1)
+        except (KeyboardInterrupt, SystemExit):
+            send_status_update('failed')
+            log.error('Interrupted')
             socket.recv()
             sys.exit(1)
 
         try:
             log.info('Copying {} to {}'.format(output_file, output_dir))
-            shutil.copy2(output_file, output_dir)
-            output_file = os.path.join(output_dir, os.path.basename(output_file))
+            shutil.copy2(os.path.join(run_dir, output_file), output_dir)
+            output_file = os.path.join(output_dir, output_file)
             log.info('Copy done')
         except:
             log.exception('Error copying outputfile')
-            socket.send_pyobj({'job_id': job_id, 'status': 'failed'})
+            send_status_update('failed')
             socket.recv()
             sys.exit(1)
 
@@ -88,16 +107,15 @@ def main():
         md5hash, _ = process.stdout.decode().split()
     except:
         log.exception('Error calculating md5sum')
-        socket.send_pyobj({'job_id': job_id, 'status': 'failed'})
+        send_status_update('failed')
         socket.recv()
         sys.exit(1)
 
-    socket.send_pyobj({
-        'job_id': job_id,
-        'status': 'success',
-        'output_file': output_file,
-        'md5hash': md5hash,
-    })
+    send_status_update(
+        'success',
+        output_file=output_file,
+        md5hash=md5hash,
+    )
     socket.recv()
 
 

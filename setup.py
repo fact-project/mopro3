@@ -19,7 +19,10 @@ setup(
         'ruamel.yaml',
         'click',
         'peewee~=3.8',
+        'pandas',
+        'retrying',
     ],
+    setup_requires=['pytest_runner'],
     entry_points={
         'console_scripts': [
             'mopro_install_root = mopro.installation.root:main',
@@ -27,4 +30,5 @@ setup(
             'mopro_install_corsika = mopro.installation.corsika:main',
         ],
     },
+    package_data={'mopro': ['resources/*']},
 )

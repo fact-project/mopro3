@@ -31,13 +31,23 @@ DatabaseConfig = namedtuple(
 # default is an in-memory sqlite database
 DatabaseConfig.__new__.__defaults__ = ('sqlite', None, None, None, None, ':memory:')
 
+SubmitterConfig = namedtuple(
+    'SubmitterConfig',
+    ['interval', 'max_queued_jobs', 'host', 'port', 'mail_settings', 'mail_address'],
+)
+SubmitterConfig.__new__.__defaults__ = (
+    60, 300, 'localhost', 1337, 'NONE', os.environ['USER'] + '@localhost'
+)
+
 
 class Config():
     corsika_password = os.environ.get('CORSIKA_PASSWORD', '')
     fluka_id = os.environ.get('FLUKA_ID', '')
     fluka_password = os.environ.get('FLUKA_PASSWORD', '')
     database = DatabaseConfig()
-    mopro_directory = None
+    submitter = SubmitterConfig()
+    mopro_directory = os.path.abspath(os.getcwd())
+    debug = False
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -51,6 +61,8 @@ class Config():
         self.parse_dict(config)
 
     def parse_dict(self, config):
+        self.debug = config.get('debug', False)
+
         corsika = config.get('corsika', {})
         self.corsika_password = corsika.get('password', '') or self.corsika_password
 
@@ -61,7 +73,11 @@ class Config():
         if config.get('database') is not None:
             self.database = DatabaseConfig(**config['database'])
 
-        self.mopro_directory = config.get('mopro_directory')
+        if config.get('submitter') is not None:
+            self.submitter = SubmitterConfig(**config['submitter'])
+
+        self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
+        self.mopro_directory = os.path.abspath(self.mopro_directory)
 
 
 config = Config()

@@ -1,4 +1,4 @@
-from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase
+from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase, ConnectionContext
 from peewee import (
     TextField, IntegerField, FloatField, Check,
     ForeignKeyField, DateTimeField, BooleanField,
@@ -10,7 +10,13 @@ import os
 from .config import config
 
 
-database = Proxy()
+class ProxyWithContext(Proxy):
+    # fix decorator usage with Proxy
+    def connection_context(self):
+        return ConnectionContext(self)
+
+
+database = ProxyWithContext()
 
 
 class BaseModel(Model):
@@ -34,7 +40,7 @@ class CorsikaSettings(BaseModel):
     inputcard_template: str
         Jinja2 template for the inputcard
     '''
-    name = TextField(unique=True)
+    name = TextField()
     version = IntegerField(default=76900)
     config_h = TextField()
     inputcard_template = TextField()
@@ -43,6 +49,12 @@ class CorsikaSettings(BaseModel):
     def format_input_card(self, run, output_file):
         return Template(self.inputcard_template).render(
             run=run, output_file=output_file
+        )
+
+    class Meta:
+        database = database
+        indexes = (
+            (('name', 'version'), True),  # unique index on name/version
         )
 
 

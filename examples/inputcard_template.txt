@@ -17,7 +17,7 @@ SEED {{ run.id * 10 + 2 }} 0 0
 SEED {{ run.id * 10 + 3 }} 0 0
 SEED {{ run.id * 10 + 4 }} 0 0
 
-CWAVLG {{ run.wavelength_min }} {{ run.wavelength_max }}
+CWAVLG 290 900
 CERSIZ {{ run.bunch_size }}                          
 CSCAT {{ run.reuse }} {{ run.max_radius * 100 }} 0
 ECUTS 0.3 0.3 0.02 0.02           

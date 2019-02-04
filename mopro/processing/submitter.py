@@ -1,10 +1,14 @@
 from threading import Thread, Event
 import logging
 import peewee
+import pandas as pd
 
-from .database import Status, CorsikaRun, CeresRun, CeresSettings, CorsikaRun
-from .queries import get_pending_jobs, count_jobs
-from .slurm import submit_job, get_current_jobs
+from ..database import Status, CorsikaRun, CeresRun
+from ..queries import get_pending_jobs, count_jobs
+from ..slurm import get_current_jobs
+
+from .submit_corsika import submit_corsika_run
+
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +23,8 @@ class JobSubmitter(Thread):
         host,
         port,
         mail_address=None,
-        mail_settings='a',
+        mail_settings='NONE',
+        debug=False,
     ):
         '''
         Parametrs
@@ -51,13 +56,14 @@ class JobSubmitter(Thread):
         self.port = port
         self.mail_settings = mail_settings
         self.mail_address = mail_address
+        self.debug = debug
 
     def run(self):
         while not self.event.is_set():
             try:
                 self.process_pending_jobs()
             except peewee.OperationalError:
-                log.warning('Lost database connection')
+                log.exception('Lost database connection')
             except Exception as e:
                 log.exception('Error during submission: {}'.format(e))
             self.event.wait(self.interval)
@@ -70,7 +76,11 @@ class JobSubmitter(Thread):
         Fetches pending runs from the processing database
         and submits them using qsub if not to many jobs are running already.
         '''
-        current_jobs = get_current_jobs()
+        if self.debug:
+            current_jobs = pd.DataFrame({'state': []})
+        else:
+            current_jobs = get_current_jobs()
+
         running_jobs = current_jobs.query('state == "running"')
         queued_jobs = current_jobs.query('state == "pending"')
         log.debug('{} jobs running'.format(len(running_jobs)))
@@ -83,26 +93,26 @@ class JobSubmitter(Thread):
         ))
 
         if len(queued_jobs) < self.max_queued_jobs:
-            pending_jobs = get_pending_jobs(limit=self.max_queued_jobs - len(queued_jobs))
+            max_jobs = self.max_queued_jobs - len(queued_jobs)
+            pending_jobs = get_pending_jobs(max_jobs=max_jobs)
 
             for job in pending_jobs:
                 if self.event.is_set():
                     break
+
+                kwargs = {
+                    'mopro_directory': self.mopro_directory,
+                    'submitter_host': self.host,
+                    'submitter_port': self.port,
+                    'mail_settings': self.mail_settings,
+                    'mail_address': self.mail_address,
+                }
+
                 try:
-                    submit_job(
-                        job,
-                        script=self.script,
-                        raw_dir=self.raw_dir,
-                        aux_dir=self.aux_dir,
-                        erna_dir=self.erna_dir,
-                        mail_address=self.mail_address,
-                        mail_settings=self.mail_settings,
-                        submitter_host=self.host,
-                        submitter_port=self.port,
-                        group=self.group,
-                    )
-                    log.info('New job with id {} queued'.format(job.id))
+                    if isinstance(job, CorsikaRun):
+                        submit_corsika_run(job, **kwargs)
+                        log.info(f'Submitted new CORSIKA job with id {job.id}')
                 except:
                     log.exception('Could not submit job')
-                    job.status = ProcessingState.get(description='failed')
+                    job.status = Status.get(name='failed')
                     job.save()

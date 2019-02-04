@@ -4,7 +4,7 @@ import logging
 from retrying import retry
 import peewee
 
-from .database import CorsikaRun, CeresRun, Status, database
+from ..database import CorsikaRun, CeresRun, Status, database
 
 log = logging.getLogger(__name__)
 
@@ -46,11 +46,11 @@ class JobMonitor(Thread):
     def update_job(self, status_update):
         if status_update['program'] == 'ceres':
             job = CeresRun.get(id=status_update['job_id'])
-        elif status_update['program'] == 'ceres':
+        elif status_update['program'] == 'corsika':
             job = CorsikaRun.get(id=status_update['job_id'])
 
         status = status_update['status']
-        job.status = Status.get(description=status)
+        job.status = Status.get(name=status)
         if status == 'success':
             job.result_file = status_update['output_file']
         job.save()
