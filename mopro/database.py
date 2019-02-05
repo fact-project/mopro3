@@ -233,6 +233,7 @@ def initialize_database():
     db_config = config.database
 
     if db_config.kind == 'sqlite':
+        os.makedirs(os.path.dirname(db_config.database), exist_ok=True)
         database.initialize(SqliteDatabase(db_config.database))
 
     elif config.database.kind == 'mysql':
