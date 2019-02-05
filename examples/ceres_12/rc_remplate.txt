@@ -78,10 +78,10 @@ RandomNumberSeedValue: {{ run.id + 1 }}
 # off-target observations set a value for the distance !=0 [deg].
 # For details see MSimPointingPos
 # -------------------------------------------------------------------------
-{% if run.diffuse %}
-MSimPointingPos.OffTargetDistance: -{{ run.off_target_distance }}
+{% if settings.diffuse %}
+MSimPointingPos.OffTargetDistance: -{{ settings.off_target_distance }}
 {% else %}
-MSimPointingPos.OffTargetDistance: {{ run.off_target_distance }}
+MSimPointingPos.OffTargetDistance: {{ settings.off_target_distance }}
 {% endif %}
 #MSimPointingPos.OffTargetPhi: -1
 

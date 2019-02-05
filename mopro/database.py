@@ -166,6 +166,8 @@ class CeresSettings(BaseModel):
     route_ac_file = TextField()
 
     # settings
+    off_target_distance = FloatField(default=6)
+    diffuse = BooleanField(default=True)
     psf_sigma = FloatField()
     apd_dead_time = FloatField()
     apd_recovery_time = FloatField()
@@ -207,16 +209,19 @@ class CeresRun(BaseModel):
     # input file
     corsika_run = ForeignKeyField(CorsikaRun)
 
-    # per run settings
-    off_target_distance = FloatField(default=6)
-    diffuse = BooleanField(default=True)
-
     # processing related fields
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
     walltime = IntegerField(default=360)
     priority = IntegerField(default=5)
     result_file = TextField(null=True)
+
+    class Meta:
+        database = database
+        indexes = (
+            # unique index corsika run / ceres settings
+            (('corsika_run', 'ceres_settings'), True),
+        )
 
 
 status_names = (
