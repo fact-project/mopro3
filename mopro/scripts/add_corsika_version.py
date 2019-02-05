@@ -31,6 +31,10 @@ def main(name, version, config_h, inputcard_template, additional_files):
     with open(inputcard_template) as f:
         inputcard_template = f.read()
 
+    if additional_files is not None:
+        with open(additional_files, 'rb') as f:
+            additional_files = f.read()
+
     try:
         with database.atomic():
             CorsikaSettings.create(
@@ -38,6 +42,7 @@ def main(name, version, config_h, inputcard_template, additional_files):
                 version=version,
                 config_h=config_h,
                 inputcard_template=inputcard_template,
+                additional_files=additional_files,
             )
     except IntegrityError as e:
         print(f'Could not insert CORSIKA settings: {e}')
