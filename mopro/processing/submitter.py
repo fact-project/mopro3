@@ -22,8 +22,10 @@ class JobSubmitter(Thread):
         mopro_directory,
         host,
         port,
+        partitions,
         mail_address=None,
         mail_settings='NONE',
+        memory=None,
         debug=False,
     ):
         '''
@@ -57,6 +59,9 @@ class JobSubmitter(Thread):
         self.mail_settings = mail_settings
         self.mail_address = mail_address
         self.debug = debug
+        self.memory = memory
+        self.partitions = list(v, k for k, v in partitions.items())
+        self.partitions.sort(reverse=True)
 
     def run(self):
         while not self.event.is_set():
@@ -106,9 +111,11 @@ class JobSubmitter(Thread):
                     'submitter_port': self.port,
                     'mail_settings': self.mail_settings,
                     'mail_address': self.mail_address,
+                    'memory': self.memory,
                 }
 
                 try:
+                    kwargs['walltime'] = self.walltime_to_partition(job.walltime)
                     if isinstance(job, CorsikaRun):
                         submit_corsika_run(job, **kwargs)
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
@@ -116,3 +123,9 @@ class JobSubmitter(Thread):
                     log.exception('Could not submit job')
                     job.status = Status.get(name='failed')
                     job.save()
+
+    def walltime_to_partition(self, walltime):
+        for max_walltime, partition in self.partitions:
+            if walltime <= max_walltime:
+                return partition
+        raise ValueError('Walltime to long for available partitions')

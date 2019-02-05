@@ -44,7 +44,7 @@ def build_sbatch_command(
     partition=None,
     mail_address=None,
     mail_settings='FAIL',
-    resources=None,
+    memory=None,
     walltime=None,
 ):
     command = []
@@ -57,9 +57,9 @@ def build_sbatch_command(
         command.extend(['-p', partition])
 
     if mail_address:
-        command.append('--mail-user={}'.format(mail_address))
+        command.append(f'--mail-user={mail_address}')
 
-    command.append('--mail-type={}'.format(mail_settings))
+    command.append(f'--mail-type={mail_settings}')
 
     if stdout:
         command.extend(['-o', stdout])
@@ -67,15 +67,11 @@ def build_sbatch_command(
     if stderr:
         command.extend(['-e', stderr])
 
-    if resources:
-        command.append('-l')
-        command.append(','.join(
-            '{}={}'.format(k, v)
-            for k, v in resources.items()
-        ))
+    if memory:
+        command.append(f'--mem={memory}')
 
     if walltime is not None:
-        command.append('--time={}'.format(walltime))
+        command.append(f'--time={walltime}')
 
     command.append(executable)
     command.extend(args)

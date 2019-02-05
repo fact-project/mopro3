@@ -45,6 +45,8 @@ def submit_corsika_run(
     submitter_port,
     mail_settings,
     mail_address,
+    partition,
+    memory,
 ):
 
     directory = build_directory_name(corsika_run)
@@ -77,6 +79,8 @@ def submit_corsika_run(
         walltime=corsika_run.walltime,
         mail_settings=mail_settings,
         mail_address=mail_address,
+        memory=memory,
+        partition=partition,
     )
     inputcard = os.path.join(output_dir, basename + '.input')
     with open(inputcard, 'w') as f:

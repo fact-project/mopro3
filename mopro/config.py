@@ -33,10 +33,18 @@ DatabaseConfig.__new__.__defaults__ = ('sqlite', None, None, None, None, ':memor
 
 SubmitterConfig = namedtuple(
     'SubmitterConfig',
-    ['interval', 'max_queued_jobs', 'host', 'port', 'mail_settings', 'mail_address'],
+    ['interval', 'max_queued_jobs', 'host', 'port'],
 )
 SubmitterConfig.__new__.__defaults__ = (
-    60, 300, 'localhost', 1337, 'NONE', os.environ['USER'] + '@localhost'
+    60, 300, 'localhost', 1337
+)
+
+ClusterConfig = namedtuple(
+    'ClusterConfig',
+    ['cpus', 'mem', 'mail_settings', 'mail_address'],
+)
+ClusterConfig.__new__.__defaults__ = (
+    1, '8G', 'NONE', os.environ['USER'] + '@localhost'
 )
 
 
@@ -48,6 +56,7 @@ class Config():
     submitter = SubmitterConfig()
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
+    partitions = {}
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -75,6 +84,12 @@ class Config():
 
         if config.get('submitter') is not None:
             self.submitter = SubmitterConfig(**config['submitter'])
+
+        if config.get('cluster') is not None:
+            self.cluster = ClusterConfig(**config['cluster'])
+
+        if config.get('partitions') is not None:
+            self.partitions = config['partitions']
 
         self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
         self.mopro_directory = os.path.abspath(self.mopro_directory)
