@@ -21,6 +21,8 @@ setup(
         'peewee~=3.8',
         'pandas',
         'retrying',
+        'jinja2',
+        'pyzmq',
     ],
     setup_requires=['pytest_runner'],
     entry_points={
