@@ -41,7 +41,7 @@ SubmitterConfig.__new__.__defaults__ = (
 
 ClusterConfig = namedtuple(
     'ClusterConfig',
-    ['cpus', 'mem', 'mail_settings', 'mail_address'],
+    ['cpus', 'memory', 'mail_settings', 'mail_address'],
 )
 ClusterConfig.__new__.__defaults__ = (
     1, '8G', 'NONE', os.environ['USER'] + '@localhost'

@@ -60,7 +60,7 @@ class JobSubmitter(Thread):
         self.mail_address = mail_address
         self.debug = debug
         self.memory = memory
-        self.partitions = list(v, k for k, v in partitions.items())
+        self.partitions = [(v, k) for k, v in partitions.items()]
         self.partitions.sort(reverse=True)
 
     def run(self):
@@ -115,7 +115,7 @@ class JobSubmitter(Thread):
                 }
 
                 try:
-                    kwargs['walltime'] = self.walltime_to_partition(job.walltime)
+                    kwargs['partition'] = self.walltime_to_partition(job.walltime)
                     if isinstance(job, CorsikaRun):
                         submit_corsika_run(job, **kwargs)
                         log.info(f'Submitted new CORSIKA job with id {job.id}')

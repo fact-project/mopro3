@@ -52,8 +52,10 @@ def main(config_file, verbose):
         max_queued_jobs=config.submitter.max_queued_jobs,
         host=config.submitter.host,
         port=config.submitter.port,
-        mail_address=config.submitter.mail_address,
-        mail_settings=config.submitter.mail_settings,
+        mail_address=config.cluster.mail_address,
+        mail_settings=config.cluster.mail_settings,
+        memory=config.cluster.memory,
+        partitions=config.partitions,
     )
 
     log.info('Starting main loop')
