@@ -33,10 +33,10 @@ DatabaseConfig.__new__.__defaults__ = ('sqlite', None, None, None, None, ':memor
 
 SubmitterConfig = namedtuple(
     'SubmitterConfig',
-    ['interval', 'max_queued_jobs', 'host', 'port'],
+    ['interval', 'max_queued_jobs', 'host', 'port', 'mode'],
 )
 SubmitterConfig.__new__.__defaults__ = (
-    60, 300, 'localhost', 1337
+    60, 300, 'localhost', 1337, 'local'
 )
 
 ClusterConfig = namedtuple(
@@ -47,6 +47,11 @@ ClusterConfig.__new__.__defaults__ = (
     1, '8G', 'NONE', os.environ['USER'] + '@localhost'
 )
 
+LocalConfig = namedtuple('LocalConfig', ['cores'])
+LocalConfig.__new__.__defaults__ = (
+    None,
+)
+
 
 class Config():
     corsika_password = os.environ.get('CORSIKA_PASSWORD', '')
@@ -54,6 +59,7 @@ class Config():
     fluka_password = os.environ.get('FLUKA_PASSWORD', '')
     database = DatabaseConfig()
     submitter = SubmitterConfig()
+    local = LocalConfig()
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
     partitions = {}
@@ -90,6 +96,9 @@ class Config():
 
         if config.get('partitions') is not None:
             self.partitions = config['partitions']
+
+        if config.get('local') is not None:
+            self.local = config['local']
 
         self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
         self.mopro_directory = os.path.abspath(self.mopro_directory)

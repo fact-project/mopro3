@@ -1,13 +1,10 @@
 import os
 import logging
-import subprocess as sp
 from pkg_resources import resource_filename
-from multiprocessing import Process
 
+from ..database import database
 from ..corsika_utils import primary_id_to_name
-from ..slurm import build_sbatch_command
-from ..config import config
-from ..database import Status, CorsikaSettings
+from ..database import CorsikaSettings
 from ..installation import install_corsika
 
 log = logging.getLogger(__name__)
@@ -33,31 +30,25 @@ def build_basename(corsika_run):
     )
 
 
-def run_local(script, env, stdout):
-    with open(stdout, 'wb') as f:
-        sp.Popen([script], env=env, stdout=f, stderr=f)
-
-
 def submit_corsika_run(
     corsika_run,
     mopro_directory,
     submitter_host,
     submitter_port,
-    mail_settings,
-    mail_address,
-    partition,
-    memory,
 ):
 
+    script = resource_filename('mopro', 'resources/run_corsika.sh')
     directory = build_directory_name(corsika_run)
-    output_dir = os.path.join(mopro_directory, 'corsika', directory)
-    os.makedirs(output_dir, exist_ok=True)
+    basename = build_basename(corsika_run)
 
+    output_dir = os.path.join(mopro_directory, 'corsika', directory)
     log_dir = os.path.join(mopro_directory, 'logs', 'corsika', directory)
+    os.makedirs(output_dir, exist_ok=True)
     os.makedirs(log_dir, exist_ok=True)
 
-    basename = build_basename(corsika_run)
+    log_file = os.path.join(log_dir, basename + '.log')
     output_file = basename + '.eventio'
+    inputcard_file = os.path.join(output_dir, basename + '.input')
 
     corsika_dir = os.path.join(
         mopro_directory, 'software', 'corsika',
@@ -65,25 +56,14 @@ def submit_corsika_run(
         str(corsika_run.corsika_settings.name),
     )
     if not os.path.exists(corsika_dir):
-        corsika_settings =  CorsikaSettings.get(id=corsika_run.corsika_settings_id)
+        with database.connection_context():
+            corsika_settings = CorsikaSettings.get(id=corsika_run.corsika_settings_id)
         install_corsika(
             corsika_dir, corsika_settings.config_h, corsika_settings.version,
             corsika_settings.additional_files,
         )
 
-    script = resource_filename('mopro', 'resources/run_corsika.sh')
-    cmd = build_sbatch_command(
-        script,
-        job_name='mopro_corsika_{}'.format(corsika_run.id),
-        stdout=os.path.join(log_dir, basename + '.log'),
-        walltime=corsika_run.walltime,
-        mail_settings=mail_settings,
-        mail_address=mail_address,
-        memory=memory,
-        partition=partition,
-    )
-    inputcard = os.path.join(output_dir, basename + '.input')
-    with open(inputcard, 'w') as f:
+    with open(inputcard_file, 'w') as f:
         content = corsika_run.corsika_settings.format_input_card(corsika_run, output_file)
         f.write(content)
 
@@ -91,7 +71,7 @@ def submit_corsika_run(
     env.update({
         'MOPRO_JOB_ID': str(corsika_run.id),
         'MOPRO_CORSIKA_DIR': corsika_dir,
-        'MOPRO_INPUTCARD': inputcard,
+        'MOPRO_INPUTCARD': inputcard_file,
         'MOPRO_OUTPUTDIR': output_dir,
         'MOPRO_OUTPUTFILE': output_file,
         'MOPRO_WALLTIME': str(corsika_run.walltime * 60),
@@ -99,18 +79,10 @@ def submit_corsika_run(
         'MOPRO_SUBMITTER_PORT': str(submitter_port),
     })
 
-    if not config.debug:
-        output = sp.check_output(
-            cmd,
-            env=env,
-        )
-        log.debug(output.decode().strip())
-    else:
-        log.info(cmd)
-        Process(
-            target=run_local,
-            args=(script, env, os.path.join(log_dir, basename + '.log'))
-        ).run()
-
-    corsika_run.status = Status.get(name='queued')
-    corsika_run.save()
+    return dict(
+        script=script,
+        env=env,
+        stdout=log_file,
+        job_name='mopro_corsika_{}'.format(corsika_run.id),
+        walltime=corsika_run.walltime,
+    )

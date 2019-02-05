@@ -1,13 +1,10 @@
 from threading import Thread, Event
 import logging
 import peewee
-import pandas as pd
 
-from ..database import Status, CorsikaRun, CeresRun
+from ..database import Status, CorsikaRun, CeresRun, database
 from ..queries import get_pending_jobs, count_jobs
-from ..slurm import get_current_jobs
-
-from .submit_corsika import submit_corsika_run
+from .corsika import prepare_corsika_job
 
 
 log = logging.getLogger(__name__)
@@ -22,11 +19,7 @@ class JobSubmitter(Thread):
         mopro_directory,
         host,
         port,
-        partitions,
-        mail_address=None,
-        mail_settings='NONE',
-        memory=None,
-        debug=False,
+        cluster,
     ):
         '''
         Parametrs
@@ -44,10 +37,6 @@ class JobSubmitter(Thread):
             hostname of the submitter node
         port: int
             port for the zmq communication
-        mail_address: str
-            mail address to receive the grid engines emails
-        mail_setting: str
-            mail setting for the grid engine
         '''
         super().__init__()
         self.event = Event()
@@ -56,12 +45,7 @@ class JobSubmitter(Thread):
         self.mopro_directory = mopro_directory
         self.host = host
         self.port = port
-        self.mail_settings = mail_settings
-        self.mail_address = mail_address
-        self.debug = debug
-        self.memory = memory
-        self.partitions = [(v, k) for k, v in partitions.items()]
-        self.partitions.sort(reverse=True)
+        self.cluster = cluster
 
     def run(self):
         while not self.event.is_set():
@@ -81,13 +65,8 @@ class JobSubmitter(Thread):
         Fetches pending runs from the processing database
         and submits them using qsub if not to many jobs are running already.
         '''
-        if self.debug:
-            current_jobs = pd.DataFrame({'state': []})
-        else:
-            current_jobs = get_current_jobs()
-
-        running_jobs = current_jobs.query('state == "running"')
-        queued_jobs = current_jobs.query('state == "pending"')
+        running_jobs = self.cluster.get_running_jobs()
+        queued_jobs = self.cluster.get_queued_jobs()
         log.debug('{} jobs running'.format(len(running_jobs)))
         log.debug('{} jobs queued'.format(len(queued_jobs)))
         log.debug('{} pending CORSIKA jobs in database'.format(
@@ -109,23 +88,20 @@ class JobSubmitter(Thread):
                     'mopro_directory': self.mopro_directory,
                     'submitter_host': self.host,
                     'submitter_port': self.port,
-                    'mail_settings': self.mail_settings,
-                    'mail_address': self.mail_address,
-                    'memory': self.memory,
                 }
 
                 try:
                     kwargs['partition'] = self.walltime_to_partition(job.walltime)
                     if isinstance(job, CorsikaRun):
-                        submit_corsika_run(job, **kwargs)
+                        self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
+
+                    with database.connection_context():
+                        job.status = Status.get(name='queued')
+                        job.save()
                 except:
                     log.exception('Could not submit job')
-                    job.status = Status.get(name='failed')
-                    job.save()
+                    with database.connection_context():
+                        job.status = Status.get(name='failed')
+                        job.save()
 
-    def walltime_to_partition(self, walltime):
-        for max_walltime, partition in self.partitions:
-            if walltime <= max_walltime:
-                return partition
-        raise ValueError('Walltime to long for available partitions')

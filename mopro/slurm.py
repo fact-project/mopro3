@@ -9,71 +9,93 @@ from io import StringIO
 log = logging.getLogger(__name__)
 
 
-def get_current_jobs(user=None):
-    ''' Return a dataframe with current jobs of user '''
-    user = user or os.environ['USER']
-    fmt = '%i,%j,%P,%S,%T,%p,%u,%V'
-    csv = StringIO(sp.check_output([
-        'squeue', '-u', user, '-o', fmt
-    ]).decode())
+class SlurmCluster:
+    def __init__(self, partitions, mail_address=None, mail_settings=None, memory=None):
+        self.mail_address = mail_address
+        self.mail_settings = mail_settings
+        self.memory = memory
+        self.partitions = [(v, k) for k, v in partitions.items()]
+        self.partitions.sort(reverse=True)
 
-    df = pd.read_csv(csv)
-    df.rename(inplace=True, columns={
-        'STATE': 'state',
-        'USER': 'owner',
-        'NAME': 'name',
-        'JOBID': 'job_number',
-        'SUBMIT_TIME': 'submission_time',
-        'PRIORITY': 'priority',
-        'START_TIME': 'start_time',
-        'PARTITION': 'queue',
-    })
-    df['state'] = df['state'].str.lower()
-    df['start_time'] = pd.to_datetime(df['start_time'])
-    df['submission_time'] = pd.to_datetime(df['submission_time'])
+    def walltime_to_partition(self, walltime):
+        for max_walltime, partition in self.partitions:
+            if walltime <= max_walltime:
+                return partition
+        raise ValueError('Walltime to long for available partitions')
 
-    return df
+    def submit_job(
+        self,
+        executable,
+        *args,
+        env=None,
+        stdout=None,
+        stderr=None,
+        job_name=None,
+        walltime=None,
+    ):
+        command = []
+        command.append('sbatch')
 
+        if job_name:
+            command.extend(['-J', job_name])
 
-def build_sbatch_command(
-    executable,
-    *args,
-    stdout=None,
-    stderr=None,
-    job_name=None,
-    partition=None,
-    mail_address=None,
-    mail_settings='FAIL',
-    memory=None,
-    walltime=None,
-):
-    command = []
-    command.append('sbatch')
-
-    if job_name:
-        command.extend(['-J', job_name])
-
-    if partition:
+        partition = self.walltime_to_partition(walltime)
         command.extend(['-p', partition])
 
-    if mail_address:
-        command.append(f'--mail-user={mail_address}')
+        if self.mail_address:
+            command.append(f'--mail-user={self.mail_address}')
 
-    command.append(f'--mail-type={mail_settings}')
+        if self.mail_settings:
+            command.append(f'--mail-type={self.mail_settings}')
 
-    if stdout:
-        command.extend(['-o', stdout])
+        if stdout:
+            command.extend(['-o', stdout])
 
-    if stderr:
-        command.extend(['-e', stderr])
+        if stderr:
+            command.extend(['-e', stderr])
 
-    if memory:
-        command.append(f'--mem={memory}')
+        if self.memory:
+            command.append(f'--mem={self.memory}')
 
-    if walltime is not None:
-        command.append(f'--time={walltime}')
+        if walltime is not None:
+            command.append(f'--time={walltime}')
 
-    command.append(executable)
-    command.extend(args)
+        command.append(executable)
+        command.extend(args)
 
-    return command
+        p = sp.run(command, env=env, capture_output=True)
+        log.debug(f'Submitted new slurm jobs: {p.stdout.decode()}')
+
+    def get_running_jobs(self):
+        return self.get_current_jobs().value_counts()['running']
+
+    def get_queued_jobs(self):
+        return self.get_current_jobs().value_counts()['pending']
+
+    def get_current_jobs(user=None):
+        ''' Return a dataframe with current jobs of user '''
+        user = user or os.environ['USER']
+        fmt = '%i,%j,%P,%S,%T,%p,%u,%V'
+        csv = StringIO(sp.check_output([
+            'squeue', '-u', user, '-o', fmt
+        ]).decode())
+
+        df = pd.read_csv(csv)
+        df.rename(inplace=True, columns={
+            'STATE': 'state',
+            'USER': 'owner',
+            'NAME': 'name',
+            'JOBID': 'job_number',
+            'SUBMIT_TIME': 'submission_time',
+            'PRIORITY': 'priority',
+            'START_TIME': 'start_time',
+            'PARTITION': 'queue',
+        })
+        df['state'] = df['state'].str.lower()
+        df['start_time'] = pd.to_datetime(df['start_time'])
+        df['submission_time'] = pd.to_datetime(df['submission_time'])
+
+        return df
+
+    def terminate(self):
+        pass
