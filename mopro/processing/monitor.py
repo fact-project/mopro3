@@ -53,6 +53,7 @@ class JobMonitor(Thread):
         job.status = Status.get(name=status)
         if status == 'success':
             job.result_file = status_update['output_file']
+            job.duration = status_update['duration']
         job.save()
 
     def terminate(self):

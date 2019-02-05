@@ -126,6 +126,7 @@ def main():
         'success',
         output_file=output_file,
         md5hash=md5hash,
+        duration=int(time.monotonic() - start_time),
     )
     socket.recv()
 

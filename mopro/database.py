@@ -1,7 +1,7 @@
 from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase, ConnectionContext
 from peewee import (
     TextField, IntegerField, FloatField, Check,
-    ForeignKeyField, DateTimeField, BooleanField,
+    ForeignKeyField, BooleanField,
     BlobField,
 )
 from jinja2 import Template
@@ -107,9 +107,8 @@ class CorsikaRun(BaseModel):
 
     # processing related fields
     priority = IntegerField(default=5)
-    start_time = DateTimeField(null=True)
-    end_time = DateTimeField(null=True)
-    status = ForeignKeyField(Status, null=True)
+    duration = IntegerField(null=True)
+    status = ForeignKeyField(Status)
     walltime = IntegerField(default=360)
     result_file = TextField(null=True)
 
@@ -213,9 +212,8 @@ class CeresRun(BaseModel):
     diffuse = BooleanField(default=True)
 
     # processing related fields
-    start_time = DateTimeField(null=True)
-    end_time = DateTimeField(null=True)
-    status = ForeignKeyField(Status, null=True)
+    duration = IntegerField(null=True)
+    status = ForeignKeyField(Status)
     walltime = IntegerField(default=360)
     priority = IntegerField(default=5)
     result_file = TextField(null=True)
