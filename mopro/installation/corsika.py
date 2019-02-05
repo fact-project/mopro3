@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 CORSIKA_URL = 'ftp://ikp-ftp.ikp.kit.edu/'
 USER = 'corsika'
-FLUKA_URL = 'https://www.fluka.org/packages/fluka2011.2x-linux-gfor64bit-7.3-AA.tar.gz'
+FLUKA_URL = 'https://www.fluka.org/packages/fluka2011.2x-linux-gfor64bit-7.4-AA.tar.gz'
 
 
 def download_corsika(path, version=76900, timeout=300):
