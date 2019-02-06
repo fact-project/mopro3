@@ -64,16 +64,16 @@ class SlurmCluster(Cluster):
         command.extend(args)
 
         p = sp.run(command, stdout=sp.PIPE, stderr=sp.STDOUT, check=True, env=env)
-        self.log.debug(f'Submitted new slurm jobs: {p.stdout.decode()}')
+        self.log.debug(f'Submitted new slurm jobs: {p.stdout.decode().strip()}')
 
     def kill_job(self, job_name):
         p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
-        stdout = p.stdout.read().decode()
+        stdout = p.stdout.read().decode().strip()
         self.log.debug(f'Canceled slurm job {stdout}')
 
     def cancel_job(self, job_name):
         p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
-        stdout = p.stdout.read().decode()
+        stdout = p.stdout.read().decode().strip()
         self.log.debug(f'Canceled slurm job {stdout}')
 
     @property
