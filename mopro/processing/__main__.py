@@ -50,10 +50,10 @@ def main(config_file, verbose):
         cluster = LocalCluster(config.local.cores)
     else:
         cluster = SlurmCluster(
-            mail_address=config.cluster.mail_address,
-            mail_settings=config.cluster.mail_settings,
-            memory=config.cluster.memory,
-            partitions=config.partitions,
+            mail_address=config.slurm.mail_address,
+            mail_settings=config.slurm.mail_settings,
+            memory=config.slurm.memory,
+            partitions=config.slurm.partitions,
         )
 
     job_monitor = JobMonitor(port=config.submitter.port)

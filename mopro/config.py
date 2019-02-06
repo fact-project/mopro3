@@ -60,7 +60,7 @@ class Config():
     database = DatabaseConfig()
     submitter = SubmitterConfig()
     local = LocalConfig()
-    slurm = SlurmConfig(partitions=[])
+    slurm = SlurmConfig(partitions={})
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
 
@@ -91,11 +91,8 @@ class Config():
         if config.get('submitter') is not None:
             self.submitter = SubmitterConfig(**config['submitter'])
 
-        if config.get('cluster') is not None:
+        if config.get('slurm') is not None:
             self.slurm = SlurmConfig(**config['slurm'])
-
-        if config.get('partitions') is not None:
-            self.partitions = config['partitions']
 
         if config.get('local') is not None:
             self.local = LocalConfig(**config['local'])

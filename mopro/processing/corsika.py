@@ -80,7 +80,7 @@ def prepare_corsika_job(
     })
 
     return dict(
-        script=script,
+        executable=script,
         env=env,
         stdout=log_file,
         job_name='mopro_corsika_{}'.format(corsika_run.id),

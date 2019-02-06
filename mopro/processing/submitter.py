@@ -90,7 +90,6 @@ class JobSubmitter(Thread):
                 }
 
                 try:
-                    kwargs['partition'] = self.walltime_to_partition(job.walltime)
                     if isinstance(job, CorsikaRun):
                         self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
                         log.info(f'Submitted new CORSIKA job with id {job.id}')

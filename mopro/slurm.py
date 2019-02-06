@@ -63,16 +63,16 @@ class SlurmCluster:
         command.append(executable)
         command.extend(args)
 
-        p = sp.run(command, env=env, capture_output=True)
+        p = sp.run(command, stdout=sp.PIPE, stderr=sp.STDOUT, check=True, env=env)
         log.debug(f'Submitted new slurm jobs: {p.stdout.decode()}')
 
     def get_running_jobs(self):
-        return self.get_current_jobs().value_counts()['running']
+        return self.get_current_jobs()['state'].value_counts().get('running', 0)
 
     def get_queued_jobs(self):
-        return self.get_current_jobs().value_counts()['pending']
+        return self.get_current_jobs()['state'].value_counts().get('pending', 0)
 
-    def get_current_jobs(user=None):
+    def get_current_jobs(self, user=None):
         ''' Return a dataframe with current jobs of user '''
         user = user or os.environ['USER']
         fmt = '%i,%j,%P,%S,%T,%p,%u,%V'
