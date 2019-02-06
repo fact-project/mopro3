@@ -30,7 +30,7 @@ def build_basename(corsika_run):
     )
 
 
-def submit_corsika_run(
+def prepare_corsika_job(
     corsika_run,
     mopro_directory,
     submitter_host,

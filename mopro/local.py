@@ -79,4 +79,4 @@ class LocalCluster(Thread):
         return len(self.running_jobs)
 
     def get_queued_jobs(self):
-        return len(self.queue)
+        return self.queue.qsize()

@@ -7,6 +7,8 @@ from ..database import initialize_database
 from .monitor import JobMonitor
 from .submitter import JobSubmitter
 from ..config import config
+from ..slurm import SlurmCluster
+from ..local import LocalCluster
 
 log = logging.getLogger(__name__)
 
@@ -44,18 +46,24 @@ def main(config_file, verbose):
     log.info('Initialising database')
     initialize_database()
 
+    if config.submitter.mode == 'local':
+        cluster = LocalCluster(config.local.cores)
+    else:
+        cluster = SlurmCluster(
+            mail_address=config.cluster.mail_address,
+            mail_settings=config.cluster.mail_settings,
+            memory=config.cluster.memory,
+            partitions=config.partitions,
+        )
+
     job_monitor = JobMonitor(port=config.submitter.port)
     job_submitter = JobSubmitter(
-        debug=config.debug,
         mopro_directory=config.mopro_directory,
         interval=config.submitter.interval,
         max_queued_jobs=config.submitter.max_queued_jobs,
         host=config.submitter.host,
         port=config.submitter.port,
-        mail_address=config.cluster.mail_address,
-        mail_settings=config.cluster.mail_settings,
-        memory=config.cluster.memory,
-        partitions=config.partitions,
+        cluster=cluster,
     )
 
     log.info('Starting main loop')

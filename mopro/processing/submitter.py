@@ -67,18 +67,17 @@ class JobSubmitter(Thread):
         '''
         running_jobs = self.cluster.get_running_jobs()
         queued_jobs = self.cluster.get_queued_jobs()
-        log.debug('{} jobs running'.format(len(running_jobs)))
-        log.debug('{} jobs queued'.format(len(queued_jobs)))
-        log.debug('{} pending CORSIKA jobs in database'.format(
-            count_jobs(CorsikaRun, status='created')
-        ))
-        log.debug('{} pending CERES jobs in database'.format(
-            count_jobs(CeresRun, status='created')
-        ))
+        pending_corsika = count_jobs(CorsikaRun, status='created')
+        pending_ceres = count_jobs(CeresRun, status='created')
 
-        if len(queued_jobs) < self.max_queued_jobs:
-            max_jobs = self.max_queued_jobs - len(queued_jobs)
-            pending_jobs = get_pending_jobs(max_jobs=max_jobs)
+        log.debug(f'{running_jobs} jobs running')
+        log.debug(f'{queued_jobs} jobs queued')
+        log.debug(f'{pending_corsika} pending CORSIKA jobs in database')
+        log.debug(f'{pending_ceres} pending CERES jobs in database')
+
+        new_jobs = self.max_queued_jobs - queued_jobs
+        if new_jobs > 0:
+            pending_jobs = get_pending_jobs(max_jobs=new_jobs)
 
             for job in pending_jobs:
                 if self.event.is_set():

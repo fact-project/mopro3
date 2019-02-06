@@ -39,11 +39,11 @@ SubmitterConfig.__new__.__defaults__ = (
     60, 300, 'localhost', 1337, 'local'
 )
 
-ClusterConfig = namedtuple(
-    'ClusterConfig',
-    ['cpus', 'memory', 'mail_settings', 'mail_address'],
+SlurmConfig = namedtuple(
+    'SlurmConfig',
+    ['partitions', 'cpus', 'memory', 'mail_settings', 'mail_address'],
 )
-ClusterConfig.__new__.__defaults__ = (
+SlurmConfig.__new__.__defaults__ = (
     1, '8G', 'NONE', os.environ['USER'] + '@localhost'
 )
 
@@ -60,9 +60,9 @@ class Config():
     database = DatabaseConfig()
     submitter = SubmitterConfig()
     local = LocalConfig()
+    slurm = SlurmConfig(partitions=[])
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
-    partitions = {}
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -92,13 +92,13 @@ class Config():
             self.submitter = SubmitterConfig(**config['submitter'])
 
         if config.get('cluster') is not None:
-            self.cluster = ClusterConfig(**config['cluster'])
+            self.slurm = SlurmConfig(**config['slurm'])
 
         if config.get('partitions') is not None:
             self.partitions = config['partitions']
 
         if config.get('local') is not None:
-            self.local = config['local']
+            self.local = LocalConfig(**config['local'])
 
         self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
         self.mopro_directory = os.path.abspath(self.mopro_directory)
