@@ -9,6 +9,12 @@ from ..database import CorsikaRun, CeresRun, Status, database
 log = logging.getLogger(__name__)
 
 
+programs = {
+    'corsika': CorsikaRun,
+    'ceres': CeresRun,
+}
+
+
 def is_operational_error(exception):
     return isinstance(exception, peewee.OperationalError)
 
@@ -30,8 +36,7 @@ class JobMonitor(Thread):
 
     def run(self):
         while not self.event.is_set():
-
-            events = self.poller.poll(timeout=1000)
+            events = self.poller.poll(timeout=1)
             for socket, n_messages in events:
                 for i in range(n_messages):
 
@@ -43,18 +48,23 @@ class JobMonitor(Thread):
 
     @retry(retry_on_exception=is_operational_error)
     @database.connection_context()
-    def update_job(self, status_update):
-        if status_update['program'] == 'ceres':
-            job = CeresRun.get(id=status_update['job_id'])
-        elif status_update['program'] == 'corsika':
-            job = CorsikaRun.get(id=status_update['job_id'])
+    def update_job(self, update):
+        model = programs[update.pop('program')]
+        job_id = update.pop('job_id')
 
-        status = status_update['status']
-        job.status = Status.get(name=status)
-        if status == 'success':
-            job.result_file = status_update['output_file']
-            job.duration = status_update['duration']
-        job.save()
+        update['status'] = Status.select().where(Status.name == update['status'])
+        created = Status.select().where(Status.name == 'created')
+
+        # the restriction on status != created
+        # fixes a race condition where dying jobs
+        # report failed status when the local cluster is shutdown
+        return (
+            model
+            .update(**update)
+            .where(model.id == job_id)
+            .where(model.status != created)
+        ).execute()
 
     def terminate(self):
+        log.info('Monitor terminating')
         self.event.set()

@@ -2,7 +2,7 @@ from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase, ConnectionContex
 from peewee import (
     TextField, IntegerField, FloatField, Check,
     ForeignKeyField, BooleanField,
-    BlobField,
+    BlobField
 )
 from jinja2 import Template
 import os
@@ -214,7 +214,8 @@ class CeresRun(BaseModel):
     status = ForeignKeyField(Status)
     walltime = IntegerField(default=360)
     priority = IntegerField(default=5)
-    result_file = TextField(null=True)
+    result_events_file = TextField(null=True)
+    result_runheader_file = TextField(null=True)
 
     class Meta:
         database = database

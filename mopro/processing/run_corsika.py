@@ -113,19 +113,9 @@ def main():
             socket.recv()
             sys.exit(1)
 
-    try:
-        process = sp.run(['md5sum', output_file], check=True, stdout=sp.PIPE)
-        md5hash, _ = process.stdout.decode().split()
-    except:
-        log.exception('Error calculating md5sum')
-        send_status_update('failed')
-        socket.recv()
-        sys.exit(1)
-
     send_status_update(
         'success',
-        output_file=output_file,
-        md5hash=md5hash,
+        result_file=output_file,
         duration=int(time.monotonic() - start_time),
     )
     socket.recv()

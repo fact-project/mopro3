@@ -2,14 +2,14 @@ import subprocess as sp
 import os
 import logging
 import pandas as pd
-
 from io import StringIO
 
+from .cluster import Cluster
 
-log = logging.getLogger(__name__)
 
+class SlurmCluster(Cluster):
+    log = logging.getLogger(__name__)
 
-class SlurmCluster:
     def __init__(self, partitions, mail_address=None, mail_settings=None, memory=None):
         self.mail_address = mail_address
         self.mail_settings = mail_settings
@@ -64,13 +64,33 @@ class SlurmCluster:
         command.extend(args)
 
         p = sp.run(command, stdout=sp.PIPE, stderr=sp.STDOUT, check=True, env=env)
-        log.debug(f'Submitted new slurm jobs: {p.stdout.decode()}')
+        self.log.debug(f'Submitted new slurm jobs: {p.stdout.decode()}')
 
-    def get_running_jobs(self):
+    def kill_job(self, job_name):
+        p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
+        stdout = p.stdout.read().decode()
+        self.log.debug(f'Canceled slurm job {stdout}')
+
+    def cancel_job(self, job_name):
+        p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
+        stdout = p.stdout.read().decode()
+        self.log.debug(f'Canceled slurm job {stdout}')
+
+    @property
+    def n_running(self):
         return self.get_current_jobs()['state'].value_counts().get('running', 0)
 
-    def get_queued_jobs(self):
+    @property
+    def n_queued(self):
         return self.get_current_jobs()['state'].value_counts().get('pending', 0)
+
+    def get_running_jobs(self):
+        jobs = self.get_current_jobs()
+        return list(jobs.loc[jobs['state'] == 'running', 'name'])
+
+    def get_queued_jobs(self):
+        jobs = self.get_current_jobs()
+        return list(jobs.loc[jobs['state'] == 'queued', 'name'])
 
     def get_current_jobs(self, user=None):
         ''' Return a dataframe with current jobs of user '''
@@ -96,6 +116,3 @@ class SlurmCluster:
         df['submission_time'] = pd.to_datetime(df['submission_time'])
 
         return df
-
-    def terminate(self):
-        pass

@@ -10,7 +10,7 @@ from ..config import config
 from ..slurm import SlurmCluster
 from ..local import LocalCluster
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('erna.processing.main')
 
 
 @click.command()
@@ -48,6 +48,7 @@ def main(config_file, verbose):
 
     if config.submitter.mode == 'local':
         cluster = LocalCluster(config.local.cores)
+        cluster.start()
     else:
         cluster = SlurmCluster(
             mail_address=config.slurm.mail_address,
@@ -75,9 +76,17 @@ def main(config_file, verbose):
 
     except (KeyboardInterrupt, SystemExit):
         log.info('Shutting done')
-        job_monitor.terminate()
         job_submitter.terminate()
         job_submitter.join()
+        log.info('Submitter shut down')
+
+        cluster.terminate()
+        cluster.join()
+        log.info('Cluster shut down')
+
+        job_monitor.terminate()
+        job_monitor.join()
+        log.info('Monitor shut down')
 
 
 if __name__ == '__main__':

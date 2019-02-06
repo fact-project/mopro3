@@ -9,18 +9,32 @@ from .database import (
 
 
 @database.connection_context()
+def update_job_status(model, job_id, new_status='created'):
+    # subquery for new status
+    status = Status.select().where(Status.name == new_status)
+    return (
+        model.update(status=status)
+        .where(model.id == job_id)
+        .execute()
+    )
+
+
+@database.connection_context()
 def count_jobs(model, status='created'):
     return (
         model.select()
-        .where(model.status == Status.get(name=status))
+        .where(model.status == Status.select().where(Status.name == status))
         .count()
     )
 
 
 @database.connection_context()
 def get_pending_jobs(max_jobs):
-    created_id = Status.get(name='created').id
+    # subqueries for process state
+    created = Status.select().where(Status.name == 'created')
+    success = Status.select().where(Status.name == 'success')
 
+    # first get all pending corsika jobs
     jobs = list(
         CorsikaRun
         .select(
@@ -31,12 +45,12 @@ def get_pending_jobs(max_jobs):
             CorsikaSettings.inputcard_template,
         )
         .join(CorsikaSettings)
-        .where(CorsikaRun.status_id == created_id)
+        .where(CorsikaRun.status == created)
         .order_by(CorsikaRun.priority)
         .limit(max_jobs)
     )
 
-    success_id = Status.get(name='success').id
+    # then get all ceres jobs, where the corsika run was already successfull
     jobs.extend(list(
         CeresRun
         .select(
@@ -45,11 +59,13 @@ def get_pending_jobs(max_jobs):
         .join(CorsikaRun)
         .switch(CeresRun)
         .join(CeresSettings)
-        .where(CorsikaRun.status_id == success_id)
-        .where(CeresRun.status_id == created_id)
+        .where(CorsikaRun.status == success)
+        .where(CeresRun.status == created)
         .order_by(CeresRun.priority)
         .limit(max_jobs)
     ))
 
+    # sort jobs by priority
     jobs.sort(key=lambda j: j.priority)
+    # return at most max_jobs jobs
     return jobs[:max_jobs]

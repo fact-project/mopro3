@@ -3,7 +3,7 @@ import logging
 import peewee
 
 from ..database import Status, CorsikaRun, CeresRun, database
-from ..queries import get_pending_jobs, count_jobs
+from ..queries import get_pending_jobs, count_jobs, update_job_status
 from .corsika import prepare_corsika_job
 
 
@@ -65,17 +65,16 @@ class JobSubmitter(Thread):
         Fetches pending runs from the processing database
         and submits them using qsub if not to many jobs are running already.
         '''
-        running_jobs = self.cluster.get_running_jobs()
-        queued_jobs = self.cluster.get_queued_jobs()
         pending_corsika = count_jobs(CorsikaRun, status='created')
         pending_ceres = count_jobs(CeresRun, status='created')
 
-        log.debug(f'{running_jobs} jobs running')
-        log.debug(f'{queued_jobs} jobs queued')
+        n_queued = self.cluster.n_queued
+        log.debug(f'{self.cluster.n_running} jobs running')
+        log.debug(f'{n_queued} jobs queued')
         log.debug(f'{pending_corsika} pending CORSIKA jobs in database')
         log.debug(f'{pending_ceres} pending CERES jobs in database')
 
-        new_jobs = self.max_queued_jobs - queued_jobs
+        new_jobs = self.max_queued_jobs - n_queued
         if new_jobs > 0:
             pending_jobs = get_pending_jobs(max_jobs=new_jobs)
 
@@ -94,12 +93,8 @@ class JobSubmitter(Thread):
                         self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
 
-                    with database.connection_context():
-                        job.status = Status.get(name='queued')
-                        job.save()
+                    update_job_status(type(job), job.id, 'queued')
                 except:
                     log.exception('Could not submit job')
-                    with database.connection_context():
-                        job.status = Status.get(name='failed')
-                        job.save()
+                    update_job_status(type(job), job.id, 'failed')
 
