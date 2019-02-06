@@ -22,7 +22,7 @@ logging.getLogger().addHandler(handler)
 
 
 def main():
-    log.info('CORSIKA executor started')
+    log.info('CERES executor started')
 
     host = os.environ['MOPRO_SUBMITTER_HOST']
     port = os.environ['MOPRO_SUBMITTER_PORT']
@@ -32,7 +32,7 @@ def main():
 
     def send_status_update(status, **kwargs):
         socket.send_pyobj({
-            'program': 'corsika',
+            'program': 'ceres',
             'job_id': job_id,
             'status': status,
             **kwargs
@@ -42,15 +42,12 @@ def main():
     socket.recv()
 
     output_dir = os.environ['MOPRO_OUTPUTDIR']
-    output_file = os.environ['MOPRO_OUTPUTFILE']
+    output_base = os.path.join(output_dir, os.environ['MOPRO_OUTPUTBASENAME'])
+    input_file = os.environ['MOPRO_INPUTFILE']
+    rc_file = os.environ['MOPRO_CERES_RC']
+    corsika_run = int(os.environ['MOPRO_CORSIKA_RUN'])
 
     os.makedirs(output_dir, exist_ok=True)
-
-    corsika_dir = os.environ['MOPRO_CORSIKA_DIR']
-    corsika_exe = os.path.basename(glob(os.path.join(corsika_dir, 'run', 'corsika*'))[0])
-
-    with open(os.environ['MOPRO_INPUTCARD'], 'rb') as f:
-        inputcard = f.read()
 
     walltime = float(os.environ['MOPRO_WALLTIME'])
     log.info('Walltime = %.0f', walltime)
@@ -59,22 +56,34 @@ def main():
     with tempfile.TemporaryDirectory(prefix=job_name) as tmp_dir:
         log.debug('Using tmp directory: {}'.format(tmp_dir))
 
-        run_dir = os.path.join(tmp_dir, 'run')
-        shutil.copytree(os.path.join(corsika_dir, 'run'), run_dir)
-        timeout = walltime - (start_time - time.monotonic()) - 300
-        try:
-            sp.run(
-                ['./' + corsika_exe],
-                check=True,
-                timeout=timeout,
-                cwd=run_dir,
-                input=inputcard,
-            )
+        cerfile = f'cer{corsika_run:08d}'
+        tmp_input_file = os.path.join(tmp_dir, cerfile)
 
+        try:
+            sp.run(['zstd', '-d', input_file, '-o', tmp_input_file], check=True)
         except sp.CalledProcessError:
             send_status_update('failed')
             socket.recv()
-            log.exception('Running CORSIKA failed')
+            log.exception('Failed to decompress input file')
+            sys.exit(1)
+
+        timeout = walltime - (start_time - time.monotonic()) - 300
+        try:
+            cmd = [
+                'ceres',
+                '-b',
+                f'--config={rc_file}',
+                f'--out={tmp_dir}',
+                '--fits',
+                f'--run-number={corsika_run}',
+                cerfile,
+            ]
+            log.info('Calling ceres using "{}"'.format(' '.join(cmd)))
+            sp.run(cmd, check=True, timeout=timeout, cwd=tmp_dir)
+        except sp.CalledProcessError:
+            send_status_update('failed')
+            socket.recv()
+            log.exception('Running CERES failed')
             sys.exit(1)
 
         except sp.TimeoutExpired:
@@ -89,30 +98,26 @@ def main():
             sys.exit(1)
 
         try:
-            log.info('Compressing file using zstd')
-            sp.run(['zstd', '-5', '--rm', os.path.join(run_dir, output_file)])
-            output_file += '.zst'
-            log.info('Compressing done')
-        except:
-            log.exception('Compressing failed')
-            send_status_update('failed')
-            socket.recv()
-            sys.exit(1)
+            events_file = glob(os.path.join(tmp_dir, '*Events.fits'))[0]
+            run_file = glob(os.path.join(tmp_dir, '*RunHeaders.fits'))[0]
 
-        try:
-            log.info('Copying {} to {}'.format(output_file, output_dir))
-            shutil.copy2(os.path.join(run_dir, output_file), output_dir)
-            output_file = os.path.join(output_dir, output_file)
+            log.info('Copying {} to {}'.format(events_file, output_base + '_Events.fits'))
+            shutil.copy2(events_file, output_base + '_Events.fits')
+
+            log.info('Copying {} to {}'.format(run_file, output_base + '_RunHeaders.fits'))
+            shutil.copy2(run_file, output_base + '_RunHeaders.fits')
+
             log.info('Copy done')
         except:
-            log.exception('Error copying outputfile')
+            log.exception('Error copying outputfiles')
             send_status_update('failed')
             socket.recv()
             sys.exit(1)
 
     send_status_update(
         'success',
-        result_file=output_file,
+        result_events_file=output_base + '_Events.fits',
+        result_runheader_file=output_base + '_RunHeaders.fits',
         duration=int(time.monotonic() - start_time),
     )
     socket.recv()

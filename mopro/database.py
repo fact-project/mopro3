@@ -4,8 +4,10 @@ from peewee import (
     ForeignKeyField, BooleanField,
     BlobField
 )
-from jinja2 import Template
+from jinja2 import Template, StrictUndefined
 import os
+import subprocess as sp
+import shutil
 
 from .config import config
 
@@ -47,7 +49,7 @@ class CorsikaSettings(BaseModel):
     additional_files = BlobField(null=True)
 
     def format_input_card(self, run, output_file):
-        return Template(self.inputcard_template).render(
+        return Template(self.inputcard_template, undefined=StrictUndefined).render(
             run=run, output_file=output_file
         )
 
@@ -156,14 +158,7 @@ class CeresSettings(BaseModel):
     rc_template = TextField()
 
     # files
-    reflector_file = TextField()
-    mirror_reflectivity_file = TextField()
-    pde_file = TextField()
-    cone_angular_acceptance_file = TextField()
-    cone_transmission_file = TextField()
-    nsb_file = TextField(null=True)
-    pixel_delay_file = TextField()
-    route_ac_file = TextField()
+    resource_files = BlobField()
 
     # settings
     off_target_distance = FloatField(default=6)
@@ -181,27 +176,35 @@ class CeresSettings(BaseModel):
     pulse_shape_function = TextField()
     residual_time_spread = FloatField()
     gapd_time_jitter = FloatField()
+    discriminator_threshold = FloatField(null=True)
 
-    def format_rc(self, run, resource_directory):
-        return Template(self.rc_template).render(
-            settings=self, run=run, resource_directory=resource_directory
+    def format_rc(self, resource_directory):
+        return Template(self.rc_template, undefined=StrictUndefined).render(
+            settings=self, resource_directory=resource_directory
         )
 
-    def write_files(self, resource_directory):
-        files = {
-            'reflector.txt': self.reflector_file,
-            'mirror-reflectivity.txt': self.mirror_reflectivity_file,
-            'pde.txt': self.pde_file,
-            'cone-angular-acceptance.txt': self.cone_angular_acceptance_file,
-            'cone-transmission.txt': self.cone_transmission_file,
-            'nsb.txt': self.nsb_file,
-            'pixel-delays.csv': self.pixel_delay_file,
-            'route-ac.txt': self.route_ac_file,
-        }
-        os.makedirs(resource_directory, exists_ok=True)
-        for name, content in files.items():
-            with open(os.path.join(resource_directory, name), 'w') as f:
-                f.write(content)
+    def write_resources(self, resource_directory):
+        try:
+            os.makedirs(resource_directory, exist_ok=True)
+
+            sp.run(
+                ['tar', 'xz', '-C', resource_directory],
+                input=self.resource_files,
+                check=True,
+            )
+
+            with open(os.path.join(resource_directory, 'ceres.rc'), 'w') as f:
+                f.write(self.format_rc(resource_directory))
+        except:
+            shutil.rmtree(resource_directory, ignore_errors=True)
+            raise
+
+    class Meta:
+        database = database
+        indexes = (
+            # unique index corsika run / ceres settings
+            (('name', 'revision'), True),
+        )
 
 
 class CeresRun(BaseModel):

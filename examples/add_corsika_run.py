@@ -9,24 +9,19 @@ from mopro.database import (
 initialize_database()
 
 with database.connection_context():
-    s = CorsikaSettings.get()
-
-    r = CorsikaRun()
-    r.corsika_settings = s
-    r.primary_particle = 14
-    r.n_showers = 10
-
-    r.energy_min = 100
-    r.energy_max = 200e3
-    r.spectral_index = -2.7
-
-    r.zenith_min = 0
-    r.zenith_max = 5
-    r.azimuth_min = 0
-    r.azimuth_max = 10
-
-    r.max_radius = 500
-    r.viewcone = 0
-    r.reuse = 20
-    r.status = Status.get(name='created')
-    r.save()
+    print('New job with id', CorsikaRun.insert(
+        corsika_settings=CorsikaSettings.select(CorsikaSettings.id).limit(1),
+        primary_particle=14,
+        n_showers=100,
+        energy_min=100,
+        energy_max=200e3,
+        spectral_index=-2.7,
+        zenith_min=0,
+        zenith_max=5,
+        azimuth_min=0,
+        azimuth_max=10,
+        max_radius=500,
+        viewcone=0,
+        reuse=20,
+        status=Status.select(Status.id).where(Status.name == 'created'),
+    ).execute(), 'inserted')

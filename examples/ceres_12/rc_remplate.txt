@@ -10,9 +10,9 @@
 # Use this if you want to setup the logging stream for the jobs
 # (overwrites command line options)
 # -------------------------------------------------------------------------
-MLog.VerbosityLevel: 0
+MLog.VerbosityLevel: 4
 MLog.DebugLevel:     0
-MLog.NoColors:       yes
+MLog.NoColors:       no
 
 # ==========================================================================
 #############################################################################
@@ -34,7 +34,7 @@ MLog.NoColors:       yes
 # Configure Eventloop
 # -------------------------------------------------------------------------
 #MaxEvents: 10000
-#Overwrite: yes,no
+Overwrite: yes
 
 
 # -------------------------------------------------------------------------
@@ -59,7 +59,7 @@ BinningTrigPos.Raw: 300 -25 275
 # Initialize random number generator (see MJob::InitRandomNumberGenerator)
 # -------------------------------------------------------------------------
 RandomNumberGenerator: TRandom3
-RandomNumberSeedValue: {{ run.id + 1 }}
+RandomNumberSeedValue: 1
 
 
 # -------------------------------------------------------------------------
@@ -71,6 +71,13 @@ RandomNumberSeedValue: {{ run.id + 1 }}
 
 # Force the use of the "hardware" trigger for calibration data
 #ForceTrigger: Yes
+
+
+# -------------------------------------------------------------------------
+# Some setup for the atmosphere. The default should be well suited.
+# -------------------------------------------------------------------------
+MSimAtmosphere.FileAerosols: {{ resource_directory }}/atmosphere-aerosols.txt
+MSimAtmosphere.FileOzone:    {{ resource_directory }}/atmosphere-ozone.txt
 
 
 # -------------------------------------------------------------------------
@@ -93,7 +100,7 @@ Reflector.Constructor: MReflector
 
 # For the file definition see MReflector::ReadFile
 
-Reflector.FileName: {resource_directory}/reflector.txt
+Reflector.FileName: {{ resource_directory }}/reflector.txt
 Reflector.SetSigmaPSF: {{ settings.psf_sigma }}
 MGeomCam.Constructor:   MGeomCamFACT();
 
@@ -147,7 +154,7 @@ MSimRandomPhotons.FileNameNSB:  {{ resource_directory }}/nsb.txt
 # evaluated for all pixels not just for the pixels which are
 # later "connected" in the trigger (used in the coincidence map)
 MSimTrigger.FileNameRouteAC: {{ resource_directory }}/route-ac.txt
-MSimTrigger.DiscriminatorThreshold: {{ setings.discriminator_threshold }}
+MSimTrigger.DiscriminatorThreshold: {{ settings.discriminator_threshold }}
 
 MSimTrigger.CableDelay: 21.0
 MSimTrigger.CableDamping: -0.96
@@ -220,4 +227,5 @@ ResidualTimeSpread.Val: {{ settings.residual_time_spread }}
 GapdTimeJitter.Val: {{ settings.gapd_time_jitter }}
 
 # last line comment
+
 

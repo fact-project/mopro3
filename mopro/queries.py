@@ -54,11 +54,19 @@ def get_pending_jobs(max_jobs):
     jobs.extend(list(
         CeresRun
         .select(
-            CeresRun, CeresSettings, CorsikaRun.result_file
+            CeresRun,
+            CeresSettings.id, CeresSettings.name, CeresSettings.revision,
+            CeresSettings.off_target_distance, CeresSettings.diffuse,
+            CorsikaRun.id, CorsikaRun.result_file,
+            CorsikaRun.zenith_min, CorsikaRun.zenith_max,
+            CorsikaRun.azimuth_min, CorsikaRun.azimuth_max,
+            CorsikaRun.primary_particle,
+            CorsikaSettings.name, CorsikaSettings.version,
         )
-        .join(CorsikaRun)
-        .switch(CeresRun)
         .join(CeresSettings)
+        .switch(CeresRun)
+        .join(CorsikaRun)
+        .join(CorsikaSettings)
         .where(CorsikaRun.status == success)
         .where(CeresRun.status == created)
         .order_by(CeresRun.priority)

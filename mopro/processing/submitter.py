@@ -5,6 +5,7 @@ import peewee
 from ..database import Status, CorsikaRun, CeresRun, database
 from ..queries import get_pending_jobs, count_jobs, update_job_status
 from .corsika import prepare_corsika_job
+from .ceres import prepare_ceres_job
 
 
 log = logging.getLogger(__name__)
@@ -92,9 +93,13 @@ class JobSubmitter(Thread):
                     if isinstance(job, CorsikaRun):
                         self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
+                    elif isinstance(job, CeresRun):
+                        self.cluster.submit_job(**prepare_ceres_job(job, **kwargs))
+                        log.info(f'Submitted new CERES job with id {job.id}')
+                    else:
+                        raise ValueError(f'Unknown job type: {job}')
 
                     update_job_status(type(job), job.id, 'queued')
                 except:
                     log.exception('Could not submit job')
                     update_job_status(type(job), job.id, 'failed')
-
