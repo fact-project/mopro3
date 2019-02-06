@@ -44,6 +44,7 @@ class LocalCluster(Cluster, Thread):
         self.log.info('Local cluster terminating')
         self.event.set()
         super().terminate()
+        self.join()
 
     def kill_job(self, job_name):
         job = self.running_jobs.get(job_name)

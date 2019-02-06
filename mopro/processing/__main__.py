@@ -10,7 +10,7 @@ from ..config import config
 from ..slurm import SlurmCluster
 from ..local import LocalCluster
 
-log = logging.getLogger('erna.processing.main')
+log = logging.getLogger('mopro.processing.main')
 
 
 @click.command()
@@ -81,8 +81,7 @@ def main(config_file, verbose):
         log.info('Submitter shut down')
 
         cluster.terminate()
-        cluster.join()
-        log.info('Cluster shut down')
+        log.info('Cleaned up runnig and queued jobs')
 
         job_monitor.terminate()
         job_monitor.join()
