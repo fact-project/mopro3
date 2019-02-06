@@ -68,12 +68,12 @@ class SlurmCluster(Cluster):
 
     def kill_job(self, job_name):
         p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
-        stdout = p.stdout.read().decode().strip()
+        stdout = p.stdout.decode().strip()
         self.log.debug(f'Canceled slurm job {stdout}')
 
     def cancel_job(self, job_name):
         p = sp.run(['scancel', '-n', job_name], stdout=sp.PIPE, stderr=sp.STDOUT)
-        stdout = p.stdout.read().decode().strip()
+        stdout = p.stdout.decode().strip()
         self.log.debug(f'Canceled slurm job {stdout}')
 
     @property
