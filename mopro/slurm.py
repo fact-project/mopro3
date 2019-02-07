@@ -15,11 +15,12 @@ class SlurmCluster(Cluster):
         self.mail_settings = mail_settings
         self.memory = memory
         self.partitions = [(v, k) for k, v in partitions.items()]
-        self.partitions.sort(reverse=True)
+        self.partitions.sort()
 
     def walltime_to_partition(self, walltime):
         for max_walltime, partition in self.partitions:
             if walltime <= max_walltime:
+                print(partition)
                 return partition
         raise ValueError('Walltime to long for available partitions')
 
@@ -78,11 +79,11 @@ class SlurmCluster(Cluster):
 
     @property
     def n_running(self):
-        return self.get_current_jobs()['state'].value_counts().get('running', 0)
+        return int(self.get_current_jobs()['state'].value_counts().get('running', 0))
 
     @property
     def n_queued(self):
-        return self.get_current_jobs()['state'].value_counts().get('pending', 0)
+        return int(self.get_current_jobs()['state'].value_counts().get('pending', 0))
 
     def get_running_jobs(self):
         jobs = self.get_current_jobs()
@@ -90,7 +91,7 @@ class SlurmCluster(Cluster):
 
     def get_queued_jobs(self):
         jobs = self.get_current_jobs()
-        return list(jobs.loc[jobs['state'] == 'queued', 'name'])
+        return list(jobs.loc[jobs['state'] == 'pending', 'name'])
 
     def get_current_jobs(self, user=None):
         ''' Return a dataframe with current jobs of user '''
