@@ -1,0 +1,52 @@
+# example configuration for mopro3
+
+# mopro base directory, everything get's stored here
+mopro_directory: mopro_tests/
+
+# corsika download password
+corsika:
+    password:
+
+# fluka download credentials
+fluka:
+    id: fuid-xxxxx
+    password:
+
+
+# database configuration
+# example for sqlite:
+database:
+    kind: sqlite
+    database: database.sqlite
+
+# example for mysql
+# database:
+#     kind: mysql
+#     database: mopro3
+#     user: mopro
+#     password: 
+#     host: 127.0.0.1
+#     port: 3306
+
+# submitter config
+submitter:
+    mode: local # run locally, alternatively use "slurm" on a slurm submission machine
+    host: localhost
+    port: 1337
+    interval: 10  # interval to check for new jubs to be submitted in seconds
+
+# configuration for slurm
+slurm:
+    mail_settings: NONE
+    mail_address: 
+    memory: 8G
+    
+    # which partitions are allowed to be used and their max walltime in minutes
+    partitions:
+        short: 120
+        medium: 480
+        long: 2880
+
+# local configuration, only maximum number of concurrent jobs at the moment
+local:
+    cores: 6
