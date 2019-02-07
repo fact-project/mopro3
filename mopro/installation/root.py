@@ -39,7 +39,7 @@ def install_root(path, cores=cpu_count()):
             lambda p: not p.startswith(sys.base_prefix),
             paths
         ))
-            
+
         cmake_call = [
             'cmake',
             f'-DCMAKE_INSTALL_PREFIX={path}',
@@ -51,7 +51,7 @@ def install_root(path, cores=cpu_count()):
         # first run without python in PATH
         sp.run(cmake_call + [source_dir], cwd=build_dir, env=env)
 
-        # second run with python config 
+        # second run with python config
         library = os.path.join(
             sysconfig.get_config_var('LIBDIR'),
             sysconfig.get_config_var('LDLIBRARY')

@@ -85,4 +85,3 @@ class Cluster(metaclass=ABCMeta):
         for name in self.get_queued_jobs():
             self.cancel_job(name)
             self.set_to_created(name)
-
