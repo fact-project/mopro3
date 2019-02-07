@@ -7,7 +7,7 @@ New FACT Monte Carlo Production, build for LIDO3 and local processing.
 `mopro` downloads and builds the required simulation software automatically,
 addionally the following programs are needed:
 
-* `gcc` and `gfortran` >= 7.3
+* `gcc` and `gfortran` >= 7.4
 * `curl`
 * `zstd`
 
