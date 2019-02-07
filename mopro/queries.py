@@ -9,11 +9,11 @@ from .database import (
 
 
 @database.connection_context()
-def update_job_status(model, job_id, new_status='created'):
+def update_job_status(model, job_id, new_status='created', **kwargs):
     # subquery for new status
     status = Status.select().where(Status.name == new_status)
     return (
-        model.update(status=status)
+        model.update(status=status, **kwargs)
         .where(model.id == job_id)
         .execute()
     )
@@ -29,7 +29,7 @@ def count_jobs(model, status='created'):
 
 
 @database.connection_context()
-def get_pending_jobs(max_jobs):
+def get_pending_jobs(max_jobs, hostname):
     # subqueries for process state
     created = Status.select().where(Status.name == 'created')
     success = Status.select().where(Status.name == 'success')
@@ -68,6 +68,7 @@ def get_pending_jobs(max_jobs):
         .join(CorsikaRun)
         .join(CorsikaSettings)
         .where(CorsikaRun.status == success)
+        .where(CorsikaRun.hostname == hostname)
         .where(CeresRun.status == created)
         .order_by(CeresRun.priority)
         .limit(max_jobs)

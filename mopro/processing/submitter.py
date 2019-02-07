@@ -1,14 +1,16 @@
 from threading import Thread, Event
 import logging
 import peewee
+import socket
 
-from ..database import Status, CorsikaRun, CeresRun, database
+from ..database import CorsikaRun, CeresRun
 from ..queries import get_pending_jobs, count_jobs, update_job_status
 from .corsika import prepare_corsika_job
 from .ceres import prepare_ceres_job
 
 
 log = logging.getLogger(__name__)
+hostname = socket.getfqdn()
 
 
 class JobSubmitter(Thread):
@@ -77,7 +79,7 @@ class JobSubmitter(Thread):
 
         new_jobs = self.max_queued_jobs - n_queued
         if new_jobs > 0:
-            pending_jobs = get_pending_jobs(max_jobs=new_jobs)
+            pending_jobs = get_pending_jobs(max_jobs=new_jobs, hostname=hostname)
 
             for job in pending_jobs:
                 if self.event.is_set():
@@ -99,7 +101,7 @@ class JobSubmitter(Thread):
                     else:
                         raise ValueError(f'Unknown job type: {job}')
 
-                    update_job_status(type(job), job.id, 'queued')
+                    update_job_status(type(job), job.id, 'queued', hostname=hostname)
                 except:
                     log.exception('Could not submit job')
                     update_job_status(type(job), job.id, 'failed')

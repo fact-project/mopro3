@@ -109,9 +109,10 @@ class CorsikaRun(BaseModel):
 
     # processing related fields
     priority = IntegerField(default=5)
+    hostname = TextField(null=True)
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
-    walltime = IntegerField(default=360)
+    walltime = IntegerField(default=2880)
     result_file = TextField(null=True)
 
     class Meta:
@@ -213,9 +214,10 @@ class CeresRun(BaseModel):
     corsika_run = ForeignKeyField(CorsikaRun)
 
     # processing related fields
+    hostname = TextField(null=True)
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
-    walltime = IntegerField(default=360)
+    walltime = IntegerField(default=120)
     priority = IntegerField(default=5)
     result_events_file = TextField(null=True)
     result_runheader_file = TextField(null=True)
