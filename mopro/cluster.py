@@ -77,11 +77,10 @@ class Cluster(metaclass=ABCMeta):
         Cleanup all running and queued jobs, must
         reset the job state to `created`
         '''
+        for name in self.get_queued_jobs():
+            self.cancel_job(name)
+            self.set_to_created(name)
 
         for name in self.get_running_jobs():
             self.kill_job(name)
-            self.set_to_created(name)
-
-        for name in self.get_queued_jobs():
-            self.cancel_job(name)
             self.set_to_created(name)
