@@ -15,6 +15,7 @@ def build_directory_name(ceres_run):
     return os.path.join(
         'ceres',
         f'r{ceres_settings.revision}',
+        f'r{ceres_settings.name}',
         corsika_run.corsika_settings.name,
         primary_id_to_name(corsika_run.primary_particle),
         f'{corsika_run.id // 1000:08d}'
