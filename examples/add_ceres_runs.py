@@ -27,4 +27,6 @@ with database.connection_context():
             ceres_settings=ceres_settings,
             corsika_run=corsika_run,
             status=Status.select(Status.id).where(Status.name == 'created'),
+            off_target_distance=6,
+            diffuse=True,
         ).execute(), 'inserted')

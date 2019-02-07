@@ -85,10 +85,10 @@ MSimAtmosphere.FileOzone:    {{ resource_directory }}/atmosphere-ozone.txt
 # off-target observations set a value for the distance !=0 [deg].
 # For details see MSimPointingPos
 # -------------------------------------------------------------------------
-{% if settings.diffuse %}
-MSimPointingPos.OffTargetDistance: -{{ settings.off_target_distance }}
+{% if run.diffuse %}
+MSimPointingPos.OffTargetDistance: -{{ run.off_target_distance }}
 {% else %}
-MSimPointingPos.OffTargetDistance: {{ settings.off_target_distance }}
+MSimPointingPos.OffTargetDistance: {{ run.off_target_distance }}
 {% endif %}
 #MSimPointingPos.OffTargetPhi: -1
 

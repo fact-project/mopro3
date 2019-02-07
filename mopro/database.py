@@ -162,8 +162,6 @@ class CeresSettings(BaseModel):
     resource_files = BlobField()
 
     # settings
-    off_target_distance = FloatField(default=6)
-    diffuse = BooleanField(default=True)
     psf_sigma = FloatField()
     apd_dead_time = FloatField()
     apd_recovery_time = FloatField()
@@ -179,10 +177,28 @@ class CeresSettings(BaseModel):
     gapd_time_jitter = FloatField()
     discriminator_threshold = FloatField(null=True)
 
-    def format_rc(self, resource_directory):
+    def format_rc(self, run, resource_directory):
+        print(self.rc_template[:10], run, resource_directory)
         return Template(self.rc_template, undefined=StrictUndefined).render(
-            settings=self, resource_directory=resource_directory
+            settings=self, run=run, resource_directory=resource_directory
         )
+
+    def rc_path(self, run, resource_directory):
+        if run.diffuse:
+            name = f'ceres_diffuse_{run.off_target_distance:.0f}d.rc'
+        else:
+            if run.off_target_distance > 0:
+                name = f'ceres_wobble_{run.off_target_distance:.1f}d.rc'
+            else:
+                name = f'ceres_on.rc'
+
+        return os.path.join(resource_directory, name)
+
+    def write_rc(self, run, resource_directory):
+        rc_path = self.rc_path(run, resource_directory)
+        rc_content = self.format_rc(run, resource_directory)
+        with open(rc_path, 'w') as f:
+            f.write(rc_content)
 
     def write_resources(self, resource_directory):
         try:
@@ -193,9 +209,6 @@ class CeresSettings(BaseModel):
                 input=self.resource_files,
                 check=True,
             )
-
-            with open(os.path.join(resource_directory, 'ceres.rc'), 'w') as f:
-                f.write(self.format_rc(resource_directory))
         except:
             shutil.rmtree(resource_directory, ignore_errors=True)
             raise
@@ -213,12 +226,16 @@ class CeresRun(BaseModel):
     # input file
     corsika_run = ForeignKeyField(CorsikaRun)
 
+    # runwise settings
+    off_target_distance = FloatField(default=6)
+    diffuse = BooleanField(default=True)
+
     # processing related fields
     hostname = TextField(null=True)
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
     walltime = IntegerField(default=120)
-    priority = IntegerField(default=5)
+    priority = IntegerField(default=4)
     result_events_file = TextField(null=True)
     result_runheader_file = TextField(null=True)
 

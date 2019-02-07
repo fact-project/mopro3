@@ -105,7 +105,7 @@ def main():
 
     send_status_update(
         'success',
-        result_file=output_file,
+        result_file=result_file,
         duration=int(time.monotonic() - start_time),
     )
     socket.recv()

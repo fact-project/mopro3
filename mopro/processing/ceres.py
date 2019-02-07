@@ -12,27 +12,34 @@ log = logging.getLogger(__name__)
 def build_directory_name(ceres_run):
     ceres_settings = ceres_run.ceres_settings
     corsika_run = ceres_run.corsika_run
+    mode = build_mode_string(ceres_run)
     return os.path.join(
         'ceres',
         f'r{ceres_settings.revision}',
-        f'r{ceres_settings.name}',
+        f'{ceres_settings.name}',
         corsika_run.corsika_settings.name,
         primary_id_to_name(corsika_run.primary_particle),
-        f'{corsika_run.id // 1000:08d}'
+        mode,
+        f'{corsika_run.id // 1000:08d}',
     )
+
+
+def build_mode_string(ceres_run):
+    corsika_run = ceres_run.corsika_run
+    if ceres_run.diffuse or corsika_run.viewcone > 0:
+        mode = f'diffuse_{ceres_run.off_target_distance:.0f}d'
+    else:
+        if ceres_run.off_target_distance > 0:
+            mode = f'wobble_{ceres_run.off_target_distance:.1f}d'
+        else:
+            mode = 'on'
+    return mode
 
 
 def build_basename(ceres_run):
     corsika_run = ceres_run.corsika_run
     ceres_settings = ceres_run.ceres_settings
-    if ceres_settings.diffuse:
-        mode = 'diffuse'
-    else:
-        if ceres_settings.off_target_distance > 0:
-            mode = 'wobble'
-        else:
-            mode = 'on'
-
+    mode = build_mode_string(ceres_run)
     return 'ceres_{primary}_{mode}_run_{run:08d}_az{min_az:03.0f}-{max_az:03.0f}_zd{min_zd:02.0f}-{max_zd:02.0f}'.format(
         name=ceres_settings.name,
         primary=primary_id_to_name(corsika_run.primary_particle),
@@ -81,12 +88,17 @@ def prepare_ceres_job(
         ceres_settings.name,
         f'r{ceres_settings.revision}',
     )
-    rc_file = os.path.join(resource_dir, 'ceres.rc')
     if not os.path.exists(resource_dir):
         with database.connection_context():
             ceres_settings = CeresSettings.get(id=ceres_settings.id)
         log.info(f'Writing ceres resources into {resource_dir}')
         ceres_settings.write_resources(resource_dir)
+
+    rc_file = ceres_settings.rc_path(ceres_run, resource_dir)
+    if not os.path.isfile(rc_file):
+        ceres_settings = CeresSettings.select(CeresSettings.rc_template).where(CeresSettings.id == ceres_settings.id).get()
+        log.info(f'Writing ceres rc to {rc_file}')
+        ceres_settings.write_rc(ceres_run, resource_dir)
 
     env = os.environ.copy()
     env['PATH'] = ':'.join([os.path.join(root_dir, 'bin'), mars_dir, env['PATH']])

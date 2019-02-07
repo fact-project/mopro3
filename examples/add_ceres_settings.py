@@ -13,12 +13,10 @@ with open('examples/ceres_12/ceres_12_resources.tar.gz', 'rb') as f:
 # these are the settings 12 as defined by Fabian and Jens
 with database.atomic():
     CeresSettings.insert(
-        name='12_diffuse',
+        name='settings_12',
         revision=19439,
         rc_template=rc_template,
         resource_files=resource_files,
-        off_target_distance=6,
-        diffuse=True,
         psf_sigma=2.0,
         apd_dead_time=3.0,
         apd_recovery_time=8.75,
