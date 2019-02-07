@@ -178,7 +178,6 @@ class CeresSettings(BaseModel):
     discriminator_threshold = FloatField(null=True)
 
     def format_rc(self, run, resource_directory):
-        print(self.rc_template[:10], run, resource_directory)
         return Template(self.rc_template, undefined=StrictUndefined).render(
             settings=self, run=run, resource_directory=resource_directory
         )

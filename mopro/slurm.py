@@ -20,7 +20,6 @@ class SlurmCluster(Cluster):
     def walltime_to_partition(self, walltime):
         for max_walltime, partition in self.partitions:
             if walltime <= max_walltime:
-                print(partition)
                 return partition
         raise ValueError('Walltime to long for available partitions')
 
