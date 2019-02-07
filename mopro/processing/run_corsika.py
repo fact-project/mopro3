@@ -90,22 +90,15 @@ def main():
 
         try:
             log.info('Compressing file using zstd')
-            sp.run(['zstd', '-5', '--rm', os.path.join(run_dir, output_file)])
-            output_file += '.zst'
+            result_file = os.path.join(output_dir, output_file + '.zst')
+            sp.run([
+                'zstd', '-5', '--rm',
+                os.path.join(run_dir, output_file),
+                '-o', result_file,
+            ])
             log.info('Compressing done')
         except:
-            log.exception('Compressing failed')
-            send_status_update('failed')
-            socket.recv()
-            sys.exit(1)
-
-        try:
-            log.info('Copying {} to {}'.format(output_file, output_dir))
-            shutil.copy2(os.path.join(run_dir, output_file), output_dir)
-            output_file = os.path.join(output_dir, output_file)
-            log.info('Copy done')
-        except:
-            log.exception('Error copying outputfile')
+            log.exception('Compressing to output destination failed failed')
             send_status_update('failed')
             socket.recv()
             sys.exit(1)
