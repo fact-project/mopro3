@@ -95,7 +95,7 @@ def main():
                 'zstd', '-5', '--rm',
                 os.path.join(run_dir, output_file),
                 '-o', result_file,
-            ])
+            ], check=True)
             log.info('Compressing done')
         except:
             log.exception('Compressing to output destination failed failed')
