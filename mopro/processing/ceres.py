@@ -96,7 +96,7 @@ def prepare_ceres_job(
 
     rc_file = ceres_settings.rc_path(ceres_run, resource_dir)
     if not os.path.isfile(rc_file):
-        ceres_settings = CeresSettings.select(CeresSettings.rc_template).where(CeresSettings.id == ceres_settings.id).get()
+        ceres_settings = CeresSettings.get(id=ceres_settings.id)
         log.info(f'Writing ceres rc to {rc_file}')
         ceres_settings.write_rc(ceres_run, resource_dir)
 
