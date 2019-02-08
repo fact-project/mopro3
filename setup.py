@@ -23,6 +23,7 @@ setup(
         'retrying',
         'jinja2',
         'pyzmq',
+        'pymysql',
     ],
     setup_requires=['pytest_runner'],
     entry_points={
