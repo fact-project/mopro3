@@ -51,6 +51,7 @@ def install_root(path, cores=cpu_count(), stdout=None, stderr=None):
         # common keyword args for each run call
         kwargs = dict(check=True, stdout=stdout, stderr=stderr, cwd=build_dir)
 
+        log.info(f'Running cmake for  ROOT in {tmpdir}')
         # first run without python in PATH
         sp.run(cmake_call + [source_dir], env=env, **kwargs)
 
@@ -66,7 +67,10 @@ def install_root(path, cores=cpu_count(), stdout=None, stderr=None):
         ])
 
         sp.run(cmake_call + [source_dir], env=env, **kwargs)
+        log.info(f'Running make for  ROOT in {tmpdir}')
         sp.run(['make', f'-j{cores:d}'], env=env, **kwargs)
+
+        log.info(f'Running make install for  ROOT in {tmpdir}')
         sp.run(['make', f'-j{cores:d}', 'install'], env=env, **kwargs)
 
 
