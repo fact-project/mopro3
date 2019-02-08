@@ -1,6 +1,6 @@
 from peewee import Proxy, Model, SqliteDatabase, MySQLDatabase, ConnectionContext
 from peewee import (
-    TextField, IntegerField, FloatField, Check,
+    CharField, TextField, IntegerField, FloatField, Check,
     ForeignKeyField, BooleanField,
     BlobField
 )
@@ -10,6 +10,11 @@ import subprocess as sp
 import shutil
 
 from .config import config
+
+
+# Make sure mysql uses a longblob field for binary storage
+# default BLOB can only store 65kb
+MySQLDatabase.field_types['BLOB'] = 'LONGBLOB'
 
 
 class ProxyWithContext(Proxy):
@@ -27,7 +32,7 @@ class BaseModel(Model):
 
 
 class Status(BaseModel):
-    name = TextField(unique=True)
+    name = CharField(unique=True)
 
 
 class CorsikaSettings(BaseModel):
@@ -42,7 +47,7 @@ class CorsikaSettings(BaseModel):
     inputcard_template: str
         Jinja2 template for the inputcard
     '''
-    name = TextField()
+    name = CharField()
     version = IntegerField(default=76900)
     config_h = TextField()
     inputcard_template = TextField()
@@ -154,7 +159,7 @@ class CorsikaRun(BaseModel):
 
 
 class CeresSettings(BaseModel):
-    name = TextField(unique=True)
+    name = CharField()
     revision = IntegerField()
     rc_template = TextField()
 
