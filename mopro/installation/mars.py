@@ -7,15 +7,25 @@ import click
 URL = 'https://trac.fact-project.org/svn/trunk/Mars'
 
 
-def install_mars(path, root_path, revision=19425, cores=cpu_count()):
-    sp.run(['svn', 'checkout', '-q', '-r', str(revision), URL, path], check=True)
+def install_mars(
+        path,
+        root_path,
+        revision=19425,
+        cores=cpu_count(),
+        stdout=None,
+        stderr=None,
+):
+    sp.run(
+        ['svn', 'checkout', '-q', '-r', str(revision), URL, path],
+        check=True, stdout=stdout, stderr=stderr,
+    )
 
     env = os.environ.copy()
 
     for k, subdir in zip(['PATH', 'LD_LIBRARY_PATH'], ['bin', 'lib']):
         env[k] = os.path.join(root_path, subdir) + ':' + os.environ[k]
 
-    sp.run(['make', f'-j{cores}'], cwd=path, env=env)
+    sp.run(['make', f'-j{cores}'], cwd=path, env=env, stdout=stdout, stderr=stderr)
 
 
 @click.command(name='install_mars')

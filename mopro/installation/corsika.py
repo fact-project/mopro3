@@ -49,6 +49,7 @@ def install_corsika(
     additional_files=None,
     download_timeout=300,
     install_timeout=120,
+    stdout=sp.PIPE, stderr=sp.STDOUT,
 ):
     path = os.path.abspath(path)
     if os.path.exists(path):
@@ -75,9 +76,10 @@ def install_corsika(
     install = sp.Popen(
         ['./coconut', '-b'],
         cwd=path,
-        stderr=sp.STDOUT, stdout=sp.PIPE,
         encoding='utf-8',
         env=env,
+        stdout=stdout,
+        stderr=stderr,
     )
     try:
         install.wait(timeout=install_timeout)

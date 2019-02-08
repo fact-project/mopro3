@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 ROOT5_URL = 'https://github.com/root-project/root/archive/v5-34-00-patches.tar.gz'
 
 
-def install_root(path, cores=cpu_count()):
+def install_root(path, cores=cpu_count(), stdout=None, stderr=None):
     path = os.path.abspath(path)
 
     if os.path.exists(path):
@@ -28,7 +28,6 @@ def install_root(path, cores=cpu_count()):
 
         build_dir = os.path.join(tmpdir, 'build')
         os.makedirs(build_dir)
-        sp.run(['echo', '$PATH'])
 
         # this fixes issues that arise when conda is used
         # it basically makes sure, root is build against systemlibs
@@ -48,8 +47,12 @@ def install_root(path, cores=cpu_count()):
             '-Dminuit2=ON',
             '-Dasimage=ON',
         ]
+
+        # common keyword args for each run call
+        kwargs = dict(check=True, stdout=stdout, stderr=stderr, cwd=build_dir)
+
         # first run without python in PATH
-        sp.run(cmake_call + [source_dir], cwd=build_dir, env=env)
+        sp.run(cmake_call + [source_dir], env=env, **kwargs)
 
         # second run with python config
         library = os.path.join(
@@ -61,10 +64,10 @@ def install_root(path, cores=cpu_count()):
             '-DPYTHON_INCLUDE_DIR={}'.format(sysconfig.get_path('include')),
             '-DPYTHON_LIBRARY={}'.format(library),
         ])
-        sp.run(cmake_call + [source_dir], cwd=build_dir, env=env)
 
-        sp.run(['make', f'-j{cores:d}'], cwd=build_dir)
-        sp.run(['make', f'-j{cores:d}', 'install'], cwd=build_dir)
+        sp.run(cmake_call + [source_dir], env=env, **kwargs)
+        sp.run(['make', f'-j{cores:d}'], env=env, **kwargs)
+        sp.run(['make', f'-j{cores:d}', 'install'], env=env, **kwargs)
 
 
 @click.command(name='install_root_5')

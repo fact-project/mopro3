@@ -1,6 +1,7 @@
 import os
 import logging
 from pkg_resources import resource_filename
+import shutil
 
 from ..database import database
 from ..corsika_utils import primary_id_to_name
@@ -56,12 +57,33 @@ def prepare_corsika_job(
         str(corsika_run.corsika_settings.name),
     )
     if not os.path.exists(corsika_dir):
+        install_log_dir = os.path.join(mopro_directory, 'logs', 'installation')
+        os.makedirs(install_log_dir, exist_ok=True)
+
         with database.connection_context():
             corsika_settings = CorsikaSettings.get(id=corsika_run.corsika_settings_id)
-        install_corsika(
-            corsika_dir, corsika_settings.config_h, corsika_settings.version,
-            corsika_settings.additional_files,
+
+        log_file = os.path.join(
+            install_log_dir,
+            f'corsika_{corsika_settings.version}_{corsika_settings.name}.log'
         )
+        if os.path.isfile(log_file):
+            raise ValueError(
+                'CORSIKA installation tried before but failed, not trying again'
+            )
+
+        try:
+            with open(log_file, 'w') as f:
+                install_corsika(
+                    corsika_dir,
+                    corsika_settings.config_h,
+                    corsika_settings.version,
+                    corsika_settings.additional_files,
+                    stdout=f, stderr=f,
+                )
+        except:
+            shutil.rmtree(corsika_dir)
+            raise
 
     with open(inputcard_file, 'w') as f:
         content = corsika_run.corsika_settings.format_input_card(corsika_run, output_file)

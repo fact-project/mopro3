@@ -1,6 +1,7 @@
 import os
 import logging
 from pkg_resources import resource_filename
+import shutil
 
 from ..database import database, CeresSettings
 from ..corsika_utils import primary_id_to_name
@@ -73,14 +74,40 @@ def prepare_ceres_job(
     log_file = os.path.join(log_dir, basename + '.log')
 
     root_dir = os.path.join(mopro_directory, 'software', 'root')
+    install_log_dir = os.path.join(mopro_directory, 'logs', 'installation')
+    os.makedirs(install_log_dir, exist_ok=True)
+
     if not os.path.exists(root_dir):
-        install_root(root_dir)
+        logfile = os.path.join(install_log_dir, 'root.log')
+        if os.path.isfile(logfile):
+            raise ValueError(
+                'ROOT installation previously attempted but failed, not trying again'
+            )
+        with open(logfile, 'w') as f:
+            install_root(root_dir, stdout=f, stderr=f)
 
     mars_dir = os.path.join(
         mopro_directory, 'software', 'mars', str(ceres_settings.revision),
     )
     if not os.path.exists(mars_dir):
-        install_mars(mars_dir, root_path=root_dir, revision=ceres_settings.revision)
+        logfile = os.path.join(install_log_dir, f'mars_r{ceres_settings.revision}.log')
+        if os.path.isfile(logfile):
+            raise ValueError(
+                'MARS installation previously attempted but failed, not trying again'
+            )
+        try:
+            with open(logfile, 'w') as f:
+                install_mars(
+                    mars_dir,
+                    root_path=root_dir,
+                    revision=ceres_settings.revision,
+                    stdout=f,
+                    stderr=f,
+                )
+        except:
+            # clean up after failed installation
+            shutil.rmtree(mars_dir)
+            raise
 
     resource_dir = os.path.join(
         mopro_directory,
