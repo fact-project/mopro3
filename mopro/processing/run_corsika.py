@@ -92,7 +92,7 @@ def main():
             log.info('Compressing file using zstd')
             result_file = os.path.join(output_dir, output_file + '.zst')
             sp.run([
-                'zstd', '-5', '--rm',
+                'zstd', '-5', '-f',
                 os.path.join(run_dir, output_file),
                 '-o', result_file,
             ], check=True)
