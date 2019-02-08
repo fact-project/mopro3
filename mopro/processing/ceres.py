@@ -20,7 +20,7 @@ def build_directory_name(ceres_run):
         corsika_run.corsika_settings.name,
         primary_id_to_name(corsika_run.primary_particle),
         mode,
-        f'{corsika_run.id // 1000:08d}',
+        f'{corsika_run.id % 1000:08d}',
     )
 
 
