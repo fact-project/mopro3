@@ -68,9 +68,9 @@ class Cluster(metaclass=ABCMeta):
 
         self.log.info(f'Setting job {job_id} to "created"')
         if program == 'corsika':
-            update_job_status(CorsikaRun, job_id, 'created')
+            update_job_status(CorsikaRun, job_id, 'created', hostname=None)
         elif program == 'ceres':
-            update_job_status(CeresRun, job_id, 'created')
+            update_job_status(CeresRun, job_id, 'created', hostname=None)
 
     def terminate(self):
         '''
