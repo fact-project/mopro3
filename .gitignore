@@ -1,4 +1,5 @@
 # ignore config file, it ma contain credentials
+*.sqlite
 mopro.yaml
 # Byte-compiled / optimized / DLL files
 __pycache__/
