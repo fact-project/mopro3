@@ -100,24 +100,28 @@ def main():
         try:
             events_file = glob(os.path.join(tmp_dir, '*Events.fits'))[0]
             run_file = glob(os.path.join(tmp_dir, '*RunHeaders.fits'))[0]
+            events_gz_file = f'{output_base}_Events.fits.gz'
+            run_gz_file = f'{output_base}_RunHeaders.fits.gz'
 
-            log.info('Copying {} to {}'.format(events_file, output_base + '_Events.fits'))
-            shutil.copy2(events_file, output_base + '_Events.fits')
+            log.info(f'Gzipping {events_file} to {events_gz_file}')
+            with open(events_gz_file, 'wb') as f:
+                sp.run(['gzip', '--to-stdout', events_file], stdout=f, check=True)
 
-            log.info('Copying {} to {}'.format(run_file, output_base + '_RunHeaders.fits'))
-            shutil.copy2(run_file, output_base + '_RunHeaders.fits')
+            log.info(f'Gzipping {run_file} to {run_gz_file}')
+            with open(run_gz_file, 'wb') as f:
+                sp.run(['gzip', '--to-stdout', run_file], stdout=f, check=True)
 
-            log.info('Copy done')
+            log.info('gzipping done')
         except:
-            log.exception('Error copying outputfiles')
+            log.exception('Error gzipping outputfiles to target destination')
             send_status_update('failed')
             socket.recv()
             sys.exit(1)
 
     send_status_update(
         'success',
-        result_events_file=output_base + '_Events.fits',
-        result_runheader_file=output_base + '_RunHeaders.fits',
+        result_events_file=output_base + '_Events.fits.gz',
+        result_runheader_file=output_base + '_RunHeaders.fits.gz',
         duration=int(time.monotonic() - start_time),
     )
     socket.recv()

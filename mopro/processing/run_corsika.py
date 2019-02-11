@@ -98,7 +98,7 @@ def main():
             ], check=True)
             log.info('Compressing done')
         except:
-            log.exception('Compressing to output destination failed failed')
+            log.exception('Compressing to output destination failed')
             send_status_update('failed')
             socket.recv()
             sys.exit(1)
