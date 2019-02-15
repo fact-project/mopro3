@@ -19,6 +19,7 @@ class Cluster(metaclass=ABCMeta):
         stderr=None,
         job_name=None,
         walltime=None,
+        memory=None,
     ):
         '''
         Add a new job to the cluster's queue

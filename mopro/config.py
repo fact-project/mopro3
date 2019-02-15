@@ -41,7 +41,7 @@ SubmitterConfig.__new__.__defaults__ = (
 
 SlurmConfig = namedtuple(
     'SlurmConfig',
-    ['partitions', 'cpus', 'memory', 'mail_settings', 'mail_address'],
+    ['partitions', 'cpus', 'mail_settings', 'mail_address'],
 )
 SlurmConfig.__new__.__defaults__ = (
     1, '8G', 'NONE', os.environ['USER'] + '@localhost'
@@ -63,6 +63,8 @@ class Config():
     slurm = SlurmConfig(partitions={})
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
+    corsika_memory = '4G'
+    ceres_memory = '16G'
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -80,6 +82,8 @@ class Config():
 
         corsika = config.get('corsika', {})
         self.corsika_password = corsika.get('password', '') or self.corsika_password
+        self.corsika_memory = corsika.get('memory') or self.corsika_memory
+        self.ceres_memory = config.get('ceres', {}).get('memory') or self.corsika_memory
 
         fluka = config.get('fluka', {})
         self.fluka_id = fluka.get('id', '') or self.fluka_id

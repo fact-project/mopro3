@@ -23,6 +23,8 @@ class JobSubmitter(Thread):
         host,
         port,
         cluster,
+        corsika_memory='4G',
+        ceres_memory='12G',
     ):
         '''
         Parametrs
@@ -49,6 +51,8 @@ class JobSubmitter(Thread):
         self.host = host
         self.port = port
         self.cluster = cluster
+        self.ceres_memory = ceres_memory
+        self.corsika_memory = corsika_memory
 
     def run(self):
         while not self.event.is_set():
@@ -93,9 +97,11 @@ class JobSubmitter(Thread):
 
                 try:
                     if isinstance(job, CorsikaRun):
+                        kwargs['memory'] = self.corsika_memory
                         self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
                     elif isinstance(job, CeresRun):
+                        kwargs['memory'] = self.ceres_memory
                         self.cluster.submit_job(**prepare_ceres_job(job, **kwargs))
                         log.info(f'Submitted new CERES job with id {job.id}')
                     else:

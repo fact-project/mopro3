@@ -13,7 +13,6 @@ class SlurmCluster(Cluster):
     def __init__(self, partitions, mail_address=None, mail_settings=None, memory=None):
         self.mail_address = mail_address
         self.mail_settings = mail_settings
-        self.memory = memory
         self.partitions = [(v, k) for k, v in partitions.items()]
         self.partitions.sort()
 
@@ -32,6 +31,7 @@ class SlurmCluster(Cluster):
         stderr=None,
         job_name=None,
         walltime=None,
+        memory=None,
     ):
         command = []
         command.append('sbatch')
@@ -54,7 +54,7 @@ class SlurmCluster(Cluster):
         if stderr:
             command.extend(['-e', stderr])
 
-        if self.memory:
+        if memory:
             command.append(f'--mem={self.memory}')
 
         if walltime is not None:

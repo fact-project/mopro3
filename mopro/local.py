@@ -30,6 +30,7 @@ class LocalCluster(Cluster, Thread):
         stderr=None,
         job_name=None,
         walltime=None,
+        memory=None,
     ):
         if args is not None:
             if not all(isinstance(arg, (bytes, str)) for arg in args):

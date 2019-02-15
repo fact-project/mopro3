@@ -53,7 +53,6 @@ def main(config_file, verbose):
         cluster = SlurmCluster(
             mail_address=config.slurm.mail_address,
             mail_settings=config.slurm.mail_settings,
-            memory=config.slurm.memory,
             partitions=config.slurm.partitions,
         )
 
