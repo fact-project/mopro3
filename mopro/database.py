@@ -114,7 +114,7 @@ class CorsikaRun(BaseModel):
 
     # processing related fields
     priority = IntegerField(default=5)
-    hostname = TextField(null=True)
+    location = TextField(null=True)
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
     walltime = IntegerField(default=2880)
@@ -235,7 +235,7 @@ class CeresRun(BaseModel):
     diffuse = BooleanField(default=True)
 
     # processing related fields
-    hostname = TextField(null=True)
+    location = TextField(null=True)
     duration = IntegerField(null=True)
     status = ForeignKeyField(Status)
     walltime = IntegerField(default=120)

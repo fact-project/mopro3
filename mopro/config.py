@@ -63,6 +63,7 @@ class Config():
     slurm = SlurmConfig(partitions={})
     mopro_directory = os.path.abspath(os.getcwd())
     debug = False
+    location = None
     corsika_memory = '4G'
     ceres_memory = '16G'
 
@@ -101,6 +102,7 @@ class Config():
         if config.get('local') is not None:
             self.local = LocalConfig(**config['local'])
 
+        self.location = config.get('location') or self.location
         self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
         self.mopro_directory = os.path.abspath(self.mopro_directory)
 

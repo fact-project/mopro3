@@ -23,6 +23,7 @@ class JobSubmitter(Thread):
         host,
         port,
         cluster,
+        location=None,
         corsika_memory='4G',
         ceres_memory='12G',
     ):
@@ -51,6 +52,7 @@ class JobSubmitter(Thread):
         self.host = host
         self.port = port
         self.cluster = cluster
+        self.location = location or hostname
         self.ceres_memory = ceres_memory
         self.corsika_memory = corsika_memory
 
@@ -83,7 +85,7 @@ class JobSubmitter(Thread):
 
         new_jobs = self.max_queued_jobs - n_queued
         if new_jobs > 0:
-            pending_jobs = get_pending_jobs(max_jobs=new_jobs, hostname=hostname)
+            pending_jobs = get_pending_jobs(max_jobs=new_jobs, location=self.location)
 
             for job in pending_jobs:
                 if self.event.is_set():
