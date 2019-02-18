@@ -54,13 +54,13 @@ def main():
 
     job_name = 'fact_mopro_job_id_' + str(job_id) + '_'
     with tempfile.TemporaryDirectory(prefix=job_name) as tmp_dir:
-        log.debug('Using tmp directory: {}'.format(tmp_dir))
+        log.info('Using tmp directory: {}'.format(tmp_dir))
 
         cerfile = f'cer{corsika_run:08d}'
         tmp_input_file = os.path.join(tmp_dir, cerfile)
 
         try:
-            sp.run(['zstd', '-d', input_file, '-o', tmp_input_file], check=True)
+            sp.run(['zstd', '-d', '-q', input_file, '-o', tmp_input_file], check=True)
         except sp.CalledProcessError:
             send_status_update('failed')
             socket.recv()
