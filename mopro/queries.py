@@ -29,7 +29,7 @@ def count_jobs(model, status='created'):
 
 
 @database.connection_context()
-def get_pending_jobs(max_jobs, hostname):
+def get_pending_jobs(max_jobs, location):
     # subqueries for process state
     created = Status.select().where(Status.name == 'created')
     success = Status.select().where(Status.name == 'success')
@@ -67,7 +67,7 @@ def get_pending_jobs(max_jobs, hostname):
         .join(CorsikaRun)
         .join(CorsikaSettings)
         .where(CorsikaRun.status == success)
-        .where(CorsikaRun.hostname == hostname)
+        .where(CorsikaRun.location == location)
         .where(CeresRun.status == created)
         .order_by(CeresRun.priority)
         .limit(max_jobs)

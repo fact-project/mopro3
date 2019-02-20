@@ -99,17 +99,21 @@ class JobSubmitter(Thread):
 
                 try:
                     if isinstance(job, CorsikaRun):
-                        kwargs['memory'] = self.corsika_memory
-                        self.cluster.submit_job(**prepare_corsika_job(job, **kwargs))
+                        self.cluster.submit_job(
+                            **prepare_corsika_job(job, **kwargs),
+                            memory=self.corsika_memory
+                        )
                         log.info(f'Submitted new CORSIKA job with id {job.id}')
                     elif isinstance(job, CeresRun):
-                        kwargs['memory'] = self.ceres_memory
-                        self.cluster.submit_job(**prepare_ceres_job(job, **kwargs))
+                        self.cluster.submit_job(
+                            **prepare_ceres_job(job, **kwargs),
+                            memory=self.ceres_memory
+                        )
                         log.info(f'Submitted new CERES job with id {job.id}')
                     else:
                         raise ValueError(f'Unknown job type: {job}')
 
-                    update_job_status(type(job), job.id, 'queued', hostname=hostname)
+                    update_job_status(type(job), job.id, 'queued', location=self.location)
                 except:
                     log.exception('Could not submit job')
                     update_job_status(type(job), job.id, 'failed')

@@ -55,7 +55,7 @@ class SlurmCluster(Cluster):
             command.extend(['-e', stderr])
 
         if memory:
-            command.append(f'--mem={self.memory}')
+            command.append(f'--mem={memory}')
 
         if walltime is not None:
             command.append(f'--time={walltime}')
