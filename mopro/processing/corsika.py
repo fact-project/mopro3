@@ -36,6 +36,7 @@ def prepare_corsika_job(
     mopro_directory,
     submitter_host,
     submitter_port,
+    tmp_dir=None,
 ):
 
     script = resource_filename('mopro', 'resources/run_corsika.sh')
@@ -101,6 +102,9 @@ def prepare_corsika_job(
         'MOPRO_SUBMITTER_PORT': str(submitter_port),
         'FLUPRO': os.path.join(corsika_dir, 'fluka'),
     })
+
+    if tmp_dir is not None:
+        env['MOPRO_TMP_DIR'] = tmp_dir
 
     return dict(
         executable=script,

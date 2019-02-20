@@ -66,6 +66,7 @@ class Config():
     location = None
     corsika_memory = '4G'
     ceres_memory = '16G'
+    tmp_dir = None
 
     def __init__(self, paths=default_paths):
         for path in paths:
@@ -105,6 +106,7 @@ class Config():
         self.location = config.get('location') or self.location
         self.mopro_directory = config.get('mopro_directory') or self.mopro_directory
         self.mopro_directory = os.path.abspath(self.mopro_directory)
+        self.tmp_dir = config.get('tmp_dir')
 
 
 config = Config()

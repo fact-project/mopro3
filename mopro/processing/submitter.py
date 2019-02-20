@@ -26,6 +26,7 @@ class JobSubmitter(Thread):
         location=None,
         corsika_memory='4G',
         ceres_memory='12G',
+        tmp_dir=None,
     ):
         '''
         Parametrs
@@ -55,6 +56,7 @@ class JobSubmitter(Thread):
         self.location = location or hostname
         self.ceres_memory = ceres_memory
         self.corsika_memory = corsika_memory
+        self.tmp_dir = tmp_dir
 
     def run(self):
         while not self.event.is_set():
@@ -95,6 +97,7 @@ class JobSubmitter(Thread):
                     'mopro_directory': self.mopro_directory,
                     'submitter_host': self.host,
                     'submitter_port': self.port,
+                    'tmp_dir': self.tmp_dir
                 }
 
                 try:

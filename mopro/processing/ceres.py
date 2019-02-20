@@ -58,6 +58,7 @@ def prepare_ceres_job(
     mopro_directory,
     submitter_host,
     submitter_port,
+    tmp_dir=None,
 ):
     ceres_settings = ceres_run.ceres_settings
     corsika_run = ceres_run.corsika_run
@@ -146,6 +147,9 @@ def prepare_ceres_job(
         'MOPRO_SUBMITTER_HOST': submitter_host,
         'MOPRO_SUBMITTER_PORT': str(submitter_port),
     })
+
+    if tmp_dir is not None:
+        env['MOPRO_TMP_DIR'] = tmp_dir
 
     return dict(
         executable=script,

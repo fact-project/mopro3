@@ -4,7 +4,6 @@ import os
 import logging
 import tempfile
 import sys
-import shutil
 from glob import glob
 import zmq
 
@@ -46,6 +45,7 @@ def main():
     input_file = os.environ['MOPRO_INPUTFILE']
     rc_file = os.environ['MOPRO_CERES_RC']
     corsika_run = int(os.environ['MOPRO_CORSIKA_RUN'])
+    tmp_dir = os.environ.get('MOPRO_TMP_DIR')
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -53,7 +53,7 @@ def main():
     log.info('Walltime = %.0f', walltime)
 
     job_name = 'fact_mopro_job_id_' + str(job_id) + '_'
-    with tempfile.TemporaryDirectory(prefix=job_name) as tmp_dir:
+    with tempfile.TemporaryDirectory(prefix=job_name, dir=tmp_dir) as tmp_dir:
         log.info('Using tmp directory: {}'.format(tmp_dir))
 
         cerfile = f'cer{corsika_run:08d}'

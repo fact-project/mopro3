@@ -65,6 +65,7 @@ def main(config_file, verbose):
         port=config.submitter.port,
         cluster=cluster,
         location=config.location,
+        tmp_dir=config.tmp_dir,
     )
 
     log.info('Starting main loop')

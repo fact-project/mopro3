@@ -43,6 +43,7 @@ def main():
 
     output_dir = os.environ['MOPRO_OUTPUTDIR']
     output_file = os.environ['MOPRO_OUTPUTFILE']
+    tmp_dir = os.environ.get('MOPRO_TMP_DIR')
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -56,7 +57,7 @@ def main():
     log.info('Walltime = %.0f', walltime)
 
     job_name = 'fact_mopro_job_id_' + str(job_id) + '_'
-    with tempfile.TemporaryDirectory(prefix=job_name) as tmp_dir:
+    with tempfile.TemporaryDirectory(prefix=job_name, dir=tmp_dir) as tmp_dir:
         log.debug('Using tmp directory: {}'.format(tmp_dir))
 
         run_dir = os.path.join(tmp_dir, 'run')
