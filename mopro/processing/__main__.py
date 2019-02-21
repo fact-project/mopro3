@@ -66,6 +66,8 @@ def main(config_file, verbose):
         cluster=cluster,
         location=config.location,
         tmp_dir=config.tmp_dir,
+        ceres_memory=config.ceres_memory,
+        corsika_memory=config.corsika_memory,
     )
 
     log.info('Starting main loop')
