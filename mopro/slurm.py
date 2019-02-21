@@ -84,15 +84,15 @@ class SlurmCluster(Cluster):
     def n_queued(self):
         return int(self.get_current_jobs()['state'].value_counts().get('pending', 0))
 
-    def get_running_jobs(self):
-        jobs = self.get_current_jobs()
+    def get_running_jobs(self, only_mopro=True):
+        jobs = self.get_current_jobs(only_mopro=only_mopro)
         return list(jobs.loc[jobs['state'] == 'running', 'name'])
 
-    def get_queued_jobs(self):
-        jobs = self.get_current_jobs()
+    def get_queued_jobs(self, only_mopro=True):
+        jobs = self.get_current_jobs(only_mopro=only_mopro)
         return list(jobs.loc[jobs['state'] == 'pending', 'name'])
 
-    def get_current_jobs(self, user=None):
+    def get_current_jobs(self, user=None, only_mopro=True):
         ''' Return a dataframe with current jobs of user '''
         user = user or os.environ['USER']
         fmt = '%i,%j,%P,%S,%T,%p,%u,%V'
@@ -114,5 +114,8 @@ class SlurmCluster(Cluster):
         df['state'] = df['state'].str.lower()
         df['start_time'] = pd.to_datetime(df['start_time'])
         df['submission_time'] = pd.to_datetime(df['submission_time'])
+
+        if only_mopro is True:
+            df = df[df['name'].str.startswith('mopro_')]
 
         return df
