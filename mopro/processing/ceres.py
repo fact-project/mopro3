@@ -79,25 +79,28 @@ def prepare_ceres_job(
     os.makedirs(install_log_dir, exist_ok=True)
 
     if not os.path.exists(root_dir):
-        logfile = os.path.join(install_log_dir, 'root.log')
-        if os.path.isfile(logfile):
+        install_logfile = os.path.join(install_log_dir, 'root.log')
+        if os.path.isfile(install_logfile):
             raise ValueError(
                 'ROOT installation previously attempted but failed, not trying again'
             )
-        with open(logfile, 'w') as f:
+        with open(install_logfile, 'w') as f:
             install_root(root_dir, stdout=f, stderr=f)
 
     mars_dir = os.path.join(
         mopro_directory, 'software', 'mars', str(ceres_settings.revision),
     )
     if not os.path.exists(mars_dir):
-        logfile = os.path.join(install_log_dir, f'mars_r{ceres_settings.revision}.log')
-        if os.path.isfile(logfile):
+        install_logfile = os.path.join(
+            install_log_dir,
+            f'mars_r{ceres_settings.revision}.log'
+        )
+        if os.path.isfile(install_logfile):
             raise ValueError(
                 'MARS installation previously attempted but failed, not trying again'
             )
         try:
-            with open(logfile, 'w') as f:
+            with open(install_logfile, 'w') as f:
                 install_mars(
                     mars_dir,
                     root_path=root_dir,

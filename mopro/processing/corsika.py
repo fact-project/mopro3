@@ -64,17 +64,17 @@ def prepare_corsika_job(
         with database.connection_context():
             corsika_settings = CorsikaSettings.get(id=corsika_run.corsika_settings_id)
 
-        log_file = os.path.join(
+        install_log_file = os.path.join(
             install_log_dir,
             f'corsika_{corsika_settings.version}_{corsika_settings.name}.log'
         )
-        if os.path.isfile(log_file):
+        if os.path.isfile(install_log_file):
             raise ValueError(
                 'CORSIKA installation tried before but failed, not trying again'
             )
 
         try:
-            with open(log_file, 'w') as f:
+            with open(install_log_file, 'w') as f:
                 install_corsika(
                     corsika_dir,
                     corsika_settings.config_h,
