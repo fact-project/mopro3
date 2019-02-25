@@ -29,6 +29,7 @@ ATMOSPHERE 8 N                   La Palma Winter
 DIRECT ./
 DATBAS F
 
+TSTART T
 PAROUT F F
 CERFIL 0                         Disable corsika raw cherenkov output
 MAXPRT 0
