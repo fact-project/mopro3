@@ -52,6 +52,10 @@ class Cluster(metaclass=ABCMeta):
         '''
 
     @abstractmethod
+    def terminate(self):
+        pass
+
+    @abstractmethod
     def kill_job(self, job_name):
         pass
 
@@ -73,15 +77,20 @@ class Cluster(metaclass=ABCMeta):
         elif program == 'ceres':
             update_job_status(CeresRun, job_id, 'created', location=None)
 
-    def terminate(self):
+    def cancel_queued(self):
         '''
-        Cleanup all running and queued jobs, must
+        Cleanup all queued jobs,
         reset the job state to `created`
         '''
         for name in self.get_queued_jobs():
             self.cancel_job(name)
             self.set_to_created(name)
 
+    def cancel_running(self):
+        '''
+        Cleanup all running jobs,
+        reset the job state to `created`
+        '''
         for name in self.get_running_jobs():
             self.kill_job(name)
             self.set_to_created(name)

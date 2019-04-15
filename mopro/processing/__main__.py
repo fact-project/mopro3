@@ -83,9 +83,27 @@ def main(config_file, verbose):
         job_submitter.join()
         log.info('Submitter shut down')
 
-        cluster.terminate()
-        log.info('Cleaned up runnig and queued jobs')
+        cluster.cancel_queued()
+        log.info('Cancelled queued jobs')
 
+        if cluster.n_running > 0:
+            answer = click.confirm('Do you want to wait for running jobs?')
+            if not answer:
+                cluster.cancel_running()
+                log.info('Cleaned up runnig jobs')
+            else:
+                try:
+                    while cluster.n_running > 0:
+                        log.info('Waiting for {} running jobs to finish'.format(
+                            cluster.n_running
+                        ))
+                        time.sleep(10)
+                except (KeyboardInterrupt, SystemExit):
+                    cluster.cancel_running()
+                    log.info('Cleaned up runnig jobs')
+
+        cluster.terminate()
+        log.info('Cluster shut down')
         job_monitor.terminate()
         job_monitor.join()
         log.info('Monitor shut down')

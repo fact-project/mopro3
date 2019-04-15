@@ -2,6 +2,8 @@ from threading import Thread, Event
 import subprocess as sp
 import logging
 from collections import namedtuple, deque
+import os
+from psutil import Process
 from .cluster import Cluster
 
 
@@ -9,6 +11,16 @@ Job = namedtuple(
     'ProcessData',
     ['executable', 'args', 'env', 'stdout', 'stderr', 'job_name', 'walltime']
 )
+
+
+
+
+def terminate_process_group(pid):
+    '''Send sigterm to a process id and its children'''
+    p = Process(pid)
+    for child in p.children(recursive=True):
+        child.terminate()
+    p.terminate()
 
 
 class LocalCluster(Cluster, Thread):
@@ -50,7 +62,7 @@ class LocalCluster(Cluster, Thread):
     def kill_job(self, job_name):
         job = self.running_jobs.get(job_name)
         if job is not None:
-            job.kill()
+            terminate_process_group(job.pid)
 
     def cancel_job(self, job_name):
         self.queue = deque([
@@ -92,7 +104,11 @@ class LocalCluster(Cluster, Thread):
         else:
             stderr = sp.STDOUT
 
-        p = sp.Popen(cmd, env=job.env, stdout=stdout, stderr=stderr)
+        p = sp.Popen(
+            cmd, env=job.env,
+            stdout=stdout, stderr=stderr,
+            preexec_fn=os.setpgrp,  # detach process, does not directly die on CTRL-C
+        )
         self.running_jobs[job.job_name] = p
 
     @property
