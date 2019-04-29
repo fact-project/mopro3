@@ -119,3 +119,6 @@ class SlurmCluster(Cluster):
             df = df[df['name'].str.startswith('mopro_')]
 
         return df
+
+    def terminate(self):
+        pass
