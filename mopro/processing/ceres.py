@@ -28,7 +28,11 @@ def build_directory_name(ceres_run):
 def build_mode_string(ceres_run):
     corsika_run = ceres_run.corsika_run
     if ceres_run.diffuse or corsika_run.viewcone > 0:
-        mode = f'diffuse_{ceres_run.off_target_distance:.0f}d'
+        if ceres_run.off_target_distance == 0:
+            angle = corsika_run.viewcone
+        else:
+            angle = ceres_run.off_target_distance
+        mode = f'diffuse_{angle:.0f}d'
     else:
         if ceres_run.off_target_distance > 0:
             mode = f'wobble_{ceres_run.off_target_distance:.1f}d'

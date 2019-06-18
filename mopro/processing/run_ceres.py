@@ -88,7 +88,7 @@ def main():
 
         except sp.TimeoutExpired:
             send_status_update('walltime_exceeded')
-            log.error('CORSIKA about to run into wall-time, terminating')
+            log.error('CERES about to run into wall-time, terminating')
             socket.recv()
             sys.exit(1)
         except (KeyboardInterrupt, SystemExit):

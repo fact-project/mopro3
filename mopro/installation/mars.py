@@ -29,7 +29,7 @@ def install_mars(
     env = os.environ.copy()
 
     for k, subdir in zip(['PATH', 'LD_LIBRARY_PATH'], ['bin', 'lib']):
-        env[k] = os.path.join(root_path, subdir) + ':' + os.environ[k]
+        env[k] = os.path.join(root_path, subdir) + ':' + os.getenv(k, '')
 
     log.info(f'Running make for MARS in {path}')
     sp.run(
