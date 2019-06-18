@@ -246,8 +246,8 @@ class CeresRun(BaseModel):
     class Meta:
         database = database
         indexes = (
-            # unique index corsika run / ceres settings
-            (('corsika_run', 'ceres_settings'), True),
+            # unique index corsika run / ceres settings / off_target_distance / diffuse
+            (('corsika_run', 'ceres_settings', 'off_target_distance', 'diffuse'), True),
         )
 
 
