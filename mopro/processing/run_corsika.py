@@ -44,6 +44,7 @@ def main():
     output_dir = os.environ['MOPRO_OUTPUTDIR']
     output_file = os.environ['MOPRO_OUTPUTFILE']
     tmp_dir = os.environ.get('MOPRO_TMP_DIR')
+    log_file = os.environ['MOPRO_LOGFILE']
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -87,6 +88,15 @@ def main():
             send_status_update('failed')
             log.error('Interrupted')
             socket.recv()
+            sys.exit(1)
+
+        with open(log_file, 'r') as f:
+            corsika_log = f.read()
+
+        if '== END OF RUN ==' not in corsika_log:
+            log.error('== END OF RUN== not in CORSIKA log output')
+            log.error('CORSIKA did not finish successfully')
+            send_status_update('failed')
             sys.exit(1)
 
         try:

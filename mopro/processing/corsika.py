@@ -100,6 +100,7 @@ def prepare_corsika_job(
         'MOPRO_WALLTIME': str(corsika_run.walltime * 60),
         'MOPRO_SUBMITTER_HOST': submitter_host,
         'MOPRO_SUBMITTER_PORT': str(submitter_port),
+        'MOPRO_LOGFILE': log_file,
         'FLUPRO': os.path.join(corsika_dir, 'fluka'),
     })
 
