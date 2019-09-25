@@ -42,6 +42,7 @@ def install_root(path, cores=cpu_count(), stdout=None, stderr=None):
         cmake_call = [
             'cmake',
             f'-DCMAKE_INSTALL_PREFIX={path}',
+            '-DCMAKE_CXX_STANDARD=11',
             '-Dbuiltin_zlib=ON',
             '-Dmathmore=ON',
             '-Dminuit2=ON',
