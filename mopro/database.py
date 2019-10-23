@@ -10,6 +10,7 @@ import subprocess as sp
 import shutil
 
 from .config import config
+from .corsika_utils import primary_id_to_name
 
 
 # Make sure mysql uses a longblob field for binary storage
@@ -157,6 +158,36 @@ class CorsikaRun(BaseModel):
     def __str__(self):
         return repr(self)
 
+    @property
+    def directory_name(self):
+        return os.path.join(
+            'corsika',
+            str(self.corsika_settings.version),
+            self.corsika_settings.name,
+            primary_id_to_name(self.primary_particle),
+            f'{self.id // 1000:05d}000',
+        )
+
+    @property
+    def basename(self):
+        return 'corsika_{primary}_run_{run:08d}_az{min_az:03.0f}-{max_az:03.0f}_zd{min_zd:02.0f}-{max_zd:02.0f}'.format(
+            primary=primary_id_to_name(self.primary_particle),
+            run=self.id,
+            min_az=self.azimuth_min,
+            max_az=self.azimuth_max,
+            min_zd=self.zenith_min,
+            max_zd=self.zenith_max,
+        )
+
+    @property
+    def logfile(self):
+        return os.path.join(
+            config.mopro_directory,
+            'logs',
+            self.directory_name,
+            self.basename + '.log'
+        )
+
 
 class CeresSettings(BaseModel):
     name = CharField()
@@ -248,6 +279,61 @@ class CeresRun(BaseModel):
         indexes = (
             # unique index corsika run / ceres settings / off_target_distance / diffuse
             (('corsika_run', 'ceres_settings', 'off_target_distance', 'diffuse'), True),
+        )
+
+    def build_mode_string(self):
+        corsika_run = self.corsika_run
+        if self.diffuse or corsika_run.viewcone > 0:
+            if self.off_target_distance == 0:
+                angle = corsika_run.viewcone
+            else:
+                angle = self.off_target_distance
+            mode = f'diffuse_{angle:.0f}d'
+        else:
+            if self.off_target_distance > 0:
+                mode = f'wobble_{self.off_target_distance:.1f}d'
+            else:
+                mode = 'on'
+        return mode
+
+    @property
+    def directory_name(self):
+        ceres_settings = self.ceres_settings
+        corsika_run = self.corsika_run
+        mode = self.build_mode_string()
+        return os.path.join(
+            'ceres',
+            f'r{ceres_settings.revision}',
+            f'{ceres_settings.name}',
+            corsika_run.corsika_settings.name,
+            primary_id_to_name(corsika_run.primary_particle),
+            mode,
+            f'{corsika_run.id // 1000:05d}000',
+        )
+
+    @property
+    def basename(self):
+        corsika_run = self.corsika_run
+        ceres_settings = self.ceres_settings
+        mode = self.build_mode_string()
+        return 'ceres_{primary}_{mode}_run_{run:08d}_az{min_az:03.0f}-{max_az:03.0f}_zd{min_zd:02.0f}-{max_zd:02.0f}'.format(
+            name=ceres_settings.name,
+            primary=primary_id_to_name(corsika_run.primary_particle),
+            mode=mode,
+            run=corsika_run.id,
+            min_az=corsika_run.azimuth_min,
+            max_az=corsika_run.azimuth_max,
+            min_zd=corsika_run.zenith_min,
+            max_zd=corsika_run.zenith_max,
+        )
+
+    @property
+    def logfile(self):
+        return os.path.join(
+            config.mopro_directory,
+            'logs',
+            self.directory_name,
+            self.basename + '.log'
         )
 
 

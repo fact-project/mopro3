@@ -4,31 +4,10 @@ from pkg_resources import resource_filename
 import shutil
 
 from ..database import database
-from ..corsika_utils import primary_id_to_name
 from ..database import CorsikaSettings
 from ..installation import install_corsika
 
 log = logging.getLogger(__name__)
-
-
-def build_directory_name(corsika_run):
-    return os.path.join(
-        str(corsika_run.corsika_settings.version),
-        corsika_run.corsika_settings.name,
-        primary_id_to_name(corsika_run.primary_particle),
-        f'{corsika_run.id // 1000:05d}000',
-    )
-
-
-def build_basename(corsika_run):
-    return 'corsika_{primary}_run_{run:08d}_az{min_az:03.0f}-{max_az:03.0f}_zd{min_zd:02.0f}-{max_zd:02.0f}'.format(
-        primary=primary_id_to_name(corsika_run.primary_particle),
-        run=corsika_run.id,
-        min_az=corsika_run.azimuth_min,
-        max_az=corsika_run.azimuth_max,
-        min_zd=corsika_run.zenith_min,
-        max_zd=corsika_run.zenith_max,
-    )
 
 
 def prepare_corsika_job(
@@ -40,11 +19,11 @@ def prepare_corsika_job(
 ):
 
     script = resource_filename('mopro', 'resources/run_corsika.sh')
-    directory = build_directory_name(corsika_run)
-    basename = build_basename(corsika_run)
+    directory = corsika_run.directory_name
+    basename = corsika_run.basename
 
-    output_dir = os.path.join(mopro_directory, 'corsika', directory)
-    log_dir = os.path.join(mopro_directory, 'logs', 'corsika', directory)
+    output_dir = os.path.join(mopro_directory, directory)
+    log_dir = os.path.join(mopro_directory, 'logs', directory)
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(log_dir, exist_ok=True)
 

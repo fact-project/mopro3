@@ -4,57 +4,9 @@ from pkg_resources import resource_filename
 import shutil
 
 from ..database import database, CeresSettings
-from ..corsika_utils import primary_id_to_name
 from ..installation import install_root, install_mars
 
 log = logging.getLogger(__name__)
-
-
-def build_directory_name(ceres_run):
-    ceres_settings = ceres_run.ceres_settings
-    corsika_run = ceres_run.corsika_run
-    mode = build_mode_string(ceres_run)
-    return os.path.join(
-        'ceres',
-        f'r{ceres_settings.revision}',
-        f'{ceres_settings.name}',
-        corsika_run.corsika_settings.name,
-        primary_id_to_name(corsika_run.primary_particle),
-        mode,
-        f'{corsika_run.id // 1000:05d}000',
-    )
-
-
-def build_mode_string(ceres_run):
-    corsika_run = ceres_run.corsika_run
-    if ceres_run.diffuse or corsika_run.viewcone > 0:
-        if ceres_run.off_target_distance == 0:
-            angle = corsika_run.viewcone
-        else:
-            angle = ceres_run.off_target_distance
-        mode = f'diffuse_{angle:.0f}d'
-    else:
-        if ceres_run.off_target_distance > 0:
-            mode = f'wobble_{ceres_run.off_target_distance:.1f}d'
-        else:
-            mode = 'on'
-    return mode
-
-
-def build_basename(ceres_run):
-    corsika_run = ceres_run.corsika_run
-    ceres_settings = ceres_run.ceres_settings
-    mode = build_mode_string(ceres_run)
-    return 'ceres_{primary}_{mode}_run_{run:08d}_az{min_az:03.0f}-{max_az:03.0f}_zd{min_zd:02.0f}-{max_zd:02.0f}'.format(
-        name=ceres_settings.name,
-        primary=primary_id_to_name(corsika_run.primary_particle),
-        mode=mode,
-        run=corsika_run.id,
-        min_az=corsika_run.azimuth_min,
-        max_az=corsika_run.azimuth_max,
-        min_zd=corsika_run.zenith_min,
-        max_zd=corsika_run.zenith_max,
-    )
 
 
 def prepare_ceres_job(
@@ -68,8 +20,8 @@ def prepare_ceres_job(
     corsika_run = ceres_run.corsika_run
 
     script = resource_filename('mopro', 'resources/run_ceres.sh')
-    directory = build_directory_name(ceres_run)
-    basename = build_basename(ceres_run)
+    directory = ceres_run.directory_name
+    basename = ceres_run.basename
 
     output_dir = os.path.join(mopro_directory, directory)
     log_dir = os.path.join(mopro_directory, 'logs', directory)
