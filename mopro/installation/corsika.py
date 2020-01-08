@@ -12,7 +12,7 @@ from .download import download_and_unpack
 log = logging.getLogger(__name__)
 
 
-CORSIKA_URL = 'ftp://ikp-ftp.ikp.kit.edu/'
+CORSIKA_URL = 'https://web.ikp.kit.edu/corsika/download'
 USER = 'corsika'
 FLUKA_URL = 'https://www.fluka.org/packages/fluka2011.2x-linux-gfor64bit-7.4-AA.tar.gz'
 

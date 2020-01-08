@@ -11,7 +11,7 @@ setup(
     name='mopro',
     description='FACT Monte Carlo Production',
     long_description=long_description,
-    version='3.0.1',
+    version='3.0.2',
     author='Maximilian Nöthe',
     author_email='maximilian.noethe@tu-dortmund.de',
     packages=find_packages(),
